@@ -1,0 +1,158 @@
+-- creating the database
+CREATE DATABASE BookHaven;
+USE BookHaven;
+
+-- creating table customer
+CREATE TABLE Customer (
+    customer_id INT AUTO_INCREMENT UNIQUE NOT NULL PRIMARY KEY,  -- customer_id is unique, not null and the primary key and is auto-incremented
+    first_name VARCHAR(50) NOT NULL, -- first name is not null
+    last_name VARCHAR(50) NOT NULL, -- last name is not null
+    pincode INT NOT NULL, -- pincode is not null
+    address VARCHAR(200) NOT NULL, -- address is not null
+    contact VARCHAR(15) NOT NULL, -- contact is not null
+    date_of_birth DATE NOT NULL, -- dob is not null
+    email VARCHAR(50) NOT NULL UNIQUE, -- email is unique and not null
+    passkey VARCHAR(10) NOT NULL, -- passkey is not null
+    amount DECIMAL(5, 2)
+);
+
+CREATE TABLE Book (
+    book_id INT AUTO_INCREMENT UNIQUE NOT NULL PRIMARY KEY, -- book_id is unique, not null and the primary key and is auto-incremented
+    book_name VARCHAR(100) NOT NULL, -- book name is not null
+    author_name VARCHAR(100) NOT NULL, -- author name is not null
+    genre VARCHAR(100) NOT NULL, -- genre is not null
+    price DECIMAL(5, 2) NOT NULL -- price is not null
+);
+
+CREATE TABLE reviews (
+    review_id INT AUTO_INCREMENT UNIQUE NOT NULL PRIMARY KEY, -- review_id is unique, not null and the primary key and is auto-incremented
+    review_body VARCHAR(1000), 
+    rating DECIMAL(1, 1) DEFAULT 0.0 -- default rating set to 0
+);
+
+CREATE TABLE Admin (
+    username VARCHAR(50) UNIQUE NOT NULL PRIMARY KEY, -- username is unique, not null and the promary key for admin
+    passkey VARCHAR(15) NOT NULL, -- passkey is not null
+    customer_id INT,
+    FOREIGN KEY(customer_id) REFERENCES customer(customer_id), -- customer_id is the foreign key
+    book_id INT,
+    FOREIGN KEY(book_id) REFERENCES book(book_id), -- book_id is the foreign key
+    review_id INT,
+    FOREIGN KEY(review_id) REFERENCES reviews(review_id)-- review_id is the foreign key
+);
+
+-- Insert rows into the Customer table
+INSERT INTO customer (first_name, last_name, pincode, address, contact, date_of_birth, email, passkey, amount)
+VALUES
+('John', 'Doe', 123456, '123 Main St, Cityville', '123-456-7890', '1990-05-15', 'john.doe@gmail.com', 'password1', 20.00),
+('Jane', 'Smith', 234567, '456 Elm St, Townsville', '987-654-3210', '1985-10-20', 'jane.smith@gmail.com', 'password2', 15.00),
+('Alice', 'Johnson', 345678, '789 Oak St, Villageton', '111-222-3333', '1995-03-25', 'alice.johnson@gmail.com', 'password3', 8.00),
+('Bob', 'Brown', 456789, '321 Pine St, Hamletville', '444-555-6666', '1988-08-10', 'bob.brown@gmail.com', 'password4', 20.00),
+('Emily', 'Davis', 567890, '654 Cedar St, Countryside', '777-888-9999', '1992-12-05', 'emily.davis@gmail.com', 'password5', 120.00),
+('Michael', 'Wilson', 678901, '987 Maple St, Suburbia', '222-333-4444', '1980-07-30', 'michael.wilson@gmail.com', 'password6', 18.00),
+('Sarah', 'Martinez', 789012, '741 Birch St, Metropolis', '555-666-7777', '1998-01-18', 'sarah.martinez@gmail.com', 'password7', 90.00),
+('David', 'Garcia', 890123, '369 Walnut St, Uptown', '888-999-0000', '1983-06-12', 'david.garcia@gmail.com', 'password8', 10.00),
+('Olivia', 'Lopez', 901234, '852 Spruce St, Downtown', '333-444-5555', '1994-09-22', 'olivia.lopez@gmail.com', 'password9', 11.00),
+('James', 'Rodriguez', 112233, '159 Fir St, Outskirts', '666-777-8888', '1987-04-07', 'james.rodriguez@gmail.com', 'password10', 14.00),
+('Sophia', 'Hernandez', 223344, '963 Oak St, Riverside', '999-000-1111', '1996-06-03', 'sophia.hernandez@gmail.com', 'password11', 13.00),
+('William', 'Gonzalez', 334455, '741 Pine St, Lakeside', '222-333-4444', '1982-11-14', 'william.gonzalez@gmail.com', 'password12', 16.00);
+
+-- Insert rows into the Book table
+INSERT INTO book (book_name, author_name, genre, price)
+VALUES
+('The Catcher in the Rye', 'J.D. Salinger', 'Literary Fiction', ROUND(RAND() * (12.5 - 2.50) + 2.50, 2)),
+('To Kill a Mockingbird', 'Harper Lee', 'Classic', ROUND(RAND() * (12.50 - 2.50) + 2.50, 2)),
+('Pride and Prejudice', 'Jane Austen', 'Romance', ROUND(RAND() * (12.50 - 2.50) + 2.50, 2)),
+('The Great Gatsby', 'F. Scott Fitzgerald', 'Classic', ROUND(RAND() * (12.50 - 2.50) + 2.50, 2)),
+('Moby-Dick', 'Herman Melville', 'Adventure', ROUND(RAND() * (12.50 - 2.50) + 2.50, 2)),
+('Brave New World', 'Aldous Huxley', 'Dystopian', ROUND(RAND() * (12.50 - 2.50) + 2.50, 2)),
+('Frankenstein', 'Mary Shelley', 'Gothic', ROUND(RAND() * (12.50 - 2.50) + 2.50, 2)),
+('1984', 'George Orwell', 'Dystopian', ROUND(RAND() * (12.50 - 2.50) + 2.50, 2)),
+('The Odyssey', 'Homer', 'Epic Poetry', ROUND(RAND() * (12.50 - 2.50) + 2.50, 2)),
+('The Hobbit', 'J.R.R. Tolkien', 'Fantasy', ROUND(RAND() * (12.50 - 2.50) + 2.50, 2));
+
+ALTER TABLE reviews
+MODIFY COLUMN rating DECIMAL(2,2); -- modifying type
+
+-- inserting row into admin
+INSERT INTO admin(username, passkey)
+VALUES
+('admin1', '123456');
+
+ALTER TABLE reviews
+MODIFY COLUMN rating INT; -- modifying type
+
+-- inserting into reviews
+INSERT INTO reviews (review_body, rating)
+VALUES 
+('Great book, loved the storyline!', FLOOR(RAND() * 6)),
+('Highly recommend, a must-read!', FLOOR(RAND() * 6)),
+('Amazing characters and plot!', FLOOR(RAND() * 6)),
+('Couldn''t put it down!', FLOOR(RAND() * 6)),
+('Interesting read, enjoyed it!', FLOOR(RAND() * 6)),
+('Engaging from start to finish!', FLOOR(RAND() * 6)),
+('A classic that never gets old.', FLOOR(RAND() * 6)),
+('Captivating and thought-provoking.', FLOOR(RAND() * 6)),
+('Highly imaginative and thrilling!', FLOOR(RAND() * 6)),
+('A journey worth taking.', FLOOR(RAND() * 6));
+
+ALTER TABLE reviews
+ADD customer_id INT,
+ADD book_id INT;
+
+- adding foreign keys for reviews
+ALTER TABLE reviews
+ADD CONSTRAINT fkr_customer_id
+FOREIGN KEY (customer_id) REFERENCES customer(customer_id),
+ADD CONSTRAINT fkr_book_id
+FOREIGN KEY (book_id) REFERENCES book (book_id);
+
+SELECT * FROM reviews;
+
+ALTER TABLE reviews
+MODIFY rating INT NOT NULL; -- making rating not null
+
+ALTER TABLE customer
+ADD owned_books INT; 
+
+-- adding foreign keys to customer
+ALTER TABLE customer
+ADD CONSTRAINT fkc_book_id
+FOREIGN KEY (owned_books) REFERENCES book(book_id);
+
+-- creating table for the weak entity order
+CREATE TABLE `order` (
+    order_id INT AUTO_INCREMENT PRIMARY KEY,
+    coupon VARCHAR(50),
+    quantity INT,
+    total_cost DECIMAL(10, 2),
+    e_wallet DECIMAL(10, 2),
+    upi VARCHAR(20),
+    cod BOOLEAN,
+    credit_debit_cards BOOLEAN,
+    book_id INT,
+    customer_id INT,
+    FOREIGN KEY (book_id) REFERENCES Book(book_id),
+    FOREIGN KEY (customer_id) REFERENCES Customer(customer_id)
+);
+-- adding trigger to ensure user is 13+
+DELIMITER $$
+CREATE TRIGGER check_age_before_insert_update
+BEFORE INSERT ON customer
+FOR EACH ROW
+BEGIN
+    IF DATEDIFF(NOW(), NEW.date_of_birth) < 4745 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Age must be 13 or older';
+    END IF;
+END$$
+DELIMITER ;
+
+-- creating many-to-many relationship table browses between book and customer
+CREATE TABLE Browses (
+    book_id INT,
+    customer_id INT,
+    PRIMARY KEY (book_id, customer_id),
+    FOREIGN KEY (book_id) REFERENCES Book(book_id),
+    FOREIGN KEY (customer_id) REFERENCES Customer(customer_id)
+);

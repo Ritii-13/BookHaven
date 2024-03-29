@@ -1,0 +1,35 @@
+-- Maintaining Book Stock on Order
+
+DELIMITER $$
+CREATE TRIGGER reduce_stock_on_order
+BEFORE INSERT ON `order`
+FOR EACH ROW
+BEGIN
+  DECLARE current_stock INT;
+  
+  SELECT stock INTO current_stock FROM book WHERE book_id = NEW.book_id;
+  
+  IF current_stock < NEW.quantity THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Insufficient book stock to fulfill order.';
+  END IF;
+  
+  UPDATE book
+  SET stock = stock - NEW.quantity
+  WHERE book_id = NEW.book_id;
+END $$
+DELIMITER ;
+
+-- Ensuring User is 13+
+
+DELIMITER $$
+CREATE TRIGGER check_age_before_insert_update
+BEFORE INSERT ON customer
+FOR EACH ROW
+BEGIN
+    IF DATEDIFF(NOW(), NEW.date_of_birth) < 4745 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Age must be 13 or older';
+    END IF;
+END$$
+DELIMITER ;
+

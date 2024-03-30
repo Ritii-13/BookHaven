@@ -36,9 +36,30 @@ app.get('/register', (req, res) => {
     res.render('register')
 })
 
+app.post('/register', async( (req, res, next) =>{
+    try{
+        //write code to make a new entry in sql table to register 
+
+    }catch(err){
+        req.flash('error', err.message);
+        res.redirect('register')
+    }
+} ))
+
 app.get('login', (req, res) => {
     res.render('login')
 })
+
+app.post('login', async((req, res, next)=>{
+    try{
+        const { email, passkey } = req.body;
+        const user = await pool.query( `SELECT * 
+                                        FROM Customer 
+                                        WHERE email=${email} and passkey=${passkey}
+                                    `)
+    }
+}))
+
 
 app.get('books', (req, res, next) => {
 
@@ -51,7 +72,6 @@ app.get('books', (req, res, next) => {
         next(new ExpressError('No Books Found', 400))
     }
 })
-
 
 
 

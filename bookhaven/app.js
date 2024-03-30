@@ -1,47 +1,82 @@
-const express = require('express');
-const ejsMate = require('ejs-mate');
-const path = require('path');
-const mysql = require('mysql2/promise'); // Using promises for cleaner async/await
-const app = express();
+const express = require('express')
+const mysql = require('mysql2/promise')
+const ejsMate = require('ejs-mate')
+const methodOverride = require('method-override')
 
-app.engine('ejs', ejsMate)
-app.set( 'view engine', 'ejs' )
-app.set('views', path.join(__dirname, 'views'))
+const ageValidation = require('./utils/ageValidation')
+const isLoggedIn = require('./utils/isLoggedIn')
+const ExpressError = require('./utils/ExpressError')
 
+const app = express()
 
 // Replace with your actual database credentials
 const pool = mysql.createPool({
-  host: '127.0.0.1',
-  user: 'your_database_user',
-  password: 'your_database_password',
-  database: 'bookhaven',
-}).promise() ;
+    host: 'your_database_host',
+    user: 'your_database_user',
+    password: 'your_database_password',
+    database: 'bookhaven',
+});
 
-// Route to handle data retrieval and display
+app.engine('ejs', ejsMate)
+app.set('view engine', 'ejs') 
+app.set('views', path.join(__dirname, 'views'))
+
+app.use(express.urlencoded({extended: true}))
+app.use(methodOverride('__method'))
+app.use(express.static(path.join(__dirname, 'public')))
+
+
+
+
 app.get('/', (req, res) => {
-    res.render('home');
+    res.render('home')
+} )
+
+app.get('/register', (req, res) => {
+    res.render('register')
 })
+
+app.get('login', (req, res) => {
+    res.render('login')
+})
+
+app.get('books', (req, res, next) => {
+
+    try{
+        const [rows] = pool.query('SELECT * FROM books');
+        const data = rows;
+        res.render('browse-books', { data });
+    }
+    catch{
+        next(new ExpressError('No Books Found', 400))
+    }
+})
+
+
+
+
+
+
 
 
 
 
 app.get('*', (req, res, next) => {
-    next(new ExpressError('Page Not Found', 404))
+
 })
 
-app.use((err, req, res, next) => {
+
+app.use( ( err, req, res, next ) => {
     const { statusCode = 500 } = err;
-    if (!err.message) err.message = 'Oh No, Something Went Wrong!'
-    res.status(statusCode).render('error', { err })
-})
+    if(!err.message){
+        err.message = 'Oh, No! Something went wrong T_T';
+        req.status(statusCode).render('error', { err })
+    }
+} )
 
-// Serve static files (HTML, CSS, etc.) from a public directory (create it)
-app.use(express.static('public'));
-
-// Set the templating engine (if using one)
-// ... (e.g., for EJS: app.set('view engine', 'ejs');)
 
 // Start the server
-// const port = process.env.PORT || 5000;
-const port = 5000
-app.listen(port, () => console.log(`Server listening on port ${port}`));
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+    console.log(`Server listening on port ${port}`)
+});

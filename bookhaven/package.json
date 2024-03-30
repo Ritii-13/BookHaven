@@ -2,7 +2,7 @@
   "name": "bookhaven",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "connect-flash": "^0.1.1",
     "dotenv": "^16.4.5",
     "ejs": "^3.1.9",
     "ejs-mate": "^4.0.0",
@@ -18,7 +19,6 @@
     "latest-version": "^9.0.0",
     "method-override": "^3.0.0",
     "mysql2": "^3.9.3",
-    "node": "^21.7.1",
     "nodemon": "^3.1.0",
     "path": "^0.12.7",
     "uuid": "^9.0.1"

@@ -1,42 +1,39 @@
-#root {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 2rem;
-    text-align: center;
-  }
-  
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
-  }
-  .logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-  }
-  .logo.react:hover {
-    filter: drop-shadow(0 0 2em #61dafbaa);
-  }
-  
-  @keyframes logo-spin {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
-  }
-  
-  @media (prefers-reduced-motion: no-preference) {
-    a:nth-of-type(2) .logo {
-      animation: logo-spin infinite 20s linear;
-    }
-  }
-  
-  .card {
-    padding: 2em;
-  }
-  
-  .read-the-docs {
-    color: #888;
-  }
+body {
+  background-color: #6c5639; /* Deep brown background */
+  color: #fff;
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+h1 {
+  font-size: 3.5rem; /* Larger font size for BookHaven */
+}
+
+h4 {
+  font-size: 1.5rem; /* Font size for subheading */
+  margin-bottom: 2rem; /* Added margin below the subheading */
+}
+
+.btn-light,
+.btn-dark {
+  transition: background-color 0.3s; /* Added hover effect transition */
+}
+
+.btn-light {
+  background-color: #6e6767; /* Light brown background for login button */
+  color: #333; /* Dark text color for login button */
+}
+
+.btn-dark {
+  background-color: #6b5440; /* Dark brown background for register button */
+}
+
+.btn-light:hover,
+.btn-dark:hover {
+  background-color: #5a4332; /* Darker brown on hover */
+}

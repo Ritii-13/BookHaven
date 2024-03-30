@@ -1,10 +1,14 @@
 const express = require('express')
 const session = require('express-session')
-const mysql = require('mysql2/promise')
+const mysql = require('mysql2')
 const ejsMate = require('ejs-mate')
 const methodOverride = require('method-override')
 const passport = require('passport')
-const passport_local = require('passport-local')
+const LocalStrategy = require('passport-local')
+const path = require('path');
+const flash = require('connect-flash');
+// const LocalStrategy = require('passport-local').Strategy;
+
 
 const ageValidation = require('./utils/ageValidation')
 const isLoggedIn = require('./utils/isLoggedIn')
@@ -18,7 +22,7 @@ const pool = mysql.createPool({
     user: 'root',
     password: '1354',
     database: 'bookhaven',
-});
+}).promise();
 
 app.engine('ejs', ejsMate)
 app.set('view engine', 'ejs') 
@@ -39,24 +43,27 @@ const sessionConfig = {
     }
 }
 
-app.use(session(sessionConfig()))
+app.use(session(sessionConfig)); // Remove the () after sessionConfig
 app.use(flash())
 
 app.use(passport.initialize())
 app.use(passport.session())
 
 passport.use(new LocalStrategy(
-    async (username, passkey, done) => {
+    async (email, passkey, done) => {
         try {
-            const [rows] = await pool.query('SELECT * FROM users WHERE username = ?', [username]);
+            console.log("wtf");
+            const [rows] = await pool.query(`SELECT * FROM Customer WHERE email = ${email}`);
             const user = rows[0];
             if (!user || user.passkey !== passkey) {
+                console.log('Invalid username or password');
                 return done(null, false);
             }
-            // if(username === 'admin' && passkey === '123456')
-
+            // if(username === 'admin1' && passkey === '123456')
+            console.log('User: ', user)
             return done(null, user);
         } catch (error) {
+            console.log('Error: ', error);
             return done(error);
         }
     }
@@ -95,25 +102,26 @@ app.post('/register', async (req, res, next) =>{
     }
 } )
 
-app.get('login', (req, res) => {
+app.get('/login', (req, res) => {
     res.render('login')
 })
 
 app.post('/login', passport.authenticate('local', {
     successRedirect: '/browse-books',
-    failureRedirect: '/login',
+    failureRedirect: '/',
 }));
 
 
-app.get('/book',  (req, res, next) => {
+app.get('/browse-books',   async (req, res, next) => {
 
     try{
-        const [rows] = pool.query('SELECT * FROM book');
+        const [rows] = await pool.query('SELECT * FROM book');
         const data = rows;
         res.render('browse-books', { data });
     }
-    catch{
-        next(new ExpressError('No Books Found', 400))
+    catch(err){
+        // next(new ExpressError('No Books Found', 400))
+        console('Error: ', err)
     }
 })
 
@@ -144,3 +152,24 @@ const port = process.env.PORT || 3000;
 app.listen(port, () => {
     console.log(`Server listening on port ${port}`)
 });
+
+// const mysql = require('mysql2')
+
+// const pool = mysql.createPool({
+//     host: '127.0.0.1',
+//     user: 'root',
+//     password: '1354',
+//     database: 'bookhaven',
+// }).promise();
+
+// async function  getNotes(){
+//     const [rows] = await pool.query('select * from Customer')
+//     return rows
+// }
+
+// async function main(){
+//     const notes = await getNotes()
+//     console.log(notes)
+// }
+
+// main()

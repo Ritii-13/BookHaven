@@ -117,6 +117,19 @@ app.get('/browse-books',  (req, res, next) => {
     }
 })
 
+app.get('/addtocart/:bookId', isLoggedIn, async (req, res, next) => {
+    const { bookId } = req.params;
+    const customerId = req.user.id;
+
+    try {
+        await pool.query('INSERT INTO cart (book_id, customer_id) VALUES (?, ?)', [bookId, customerId]);
+        req.flash('success', 'Book added to cart successfully.');
+        res.redirect('/browse-books');
+    } catch (error) {
+        next(error);
+    }
+});
+
 app.post('/addtocart/#book_id', (req, res) =>{
     //sql query
 })

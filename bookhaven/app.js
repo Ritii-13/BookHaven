@@ -46,14 +46,14 @@ app.use(passport.initialize())
 app.use(passport.session())
 
 passport.use(new LocalStrategy(
-    async (username, passkey, done) => {
+    async (email, passkey, done) => {
         try {
-            const [rows] = await pool.query('SELECT * FROM users WHERE username = ?', [username]);
+            const [rows] = await pool.query('SELECT * FROM Customer WHERE email = ?', [email]);
             const user = rows[0];
             if (!user || user.passkey !== passkey) {
                 return done(null, false);
             }
-            // if(username === 'admin' && passkey === '123456')
+            // if(username === 'admin1' && passkey === '123456')
 
             return done(null, user);
         } catch (error) {
@@ -105,7 +105,7 @@ app.post('/login', passport.authenticate('local', {
 }));
 
 
-app.get('/book',  (req, res, next) => {
+app.get('/browse-books',  (req, res, next) => {
 
     try{
         const [rows] = pool.query('SELECT * FROM book');
@@ -117,7 +117,9 @@ app.get('/book',  (req, res, next) => {
     }
 })
 
-app.get('')
+app.post('/addtocart/#book_id', (req, res) =>{
+    //sql query
+})
 
 
 

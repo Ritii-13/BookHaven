@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="/stylesheets/cart.css">
 </head>
 <body>
-    <h1>Cart</h1>
+    <h1>My Cart</h1>
     <div class="container">
         <table>
             <thead>
@@ -32,7 +32,20 @@
                     </tr>
                 <% }); %>
             </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3">Total</td>
+                    <td><%= totalPrice.toFixed(2) %></td>
+                    <td><%= totalItems %></td>
+                </tr>
+            </tfoot>
         </table>
+        <div class="container">
+            <table>
+                <!-- Your table content -->
+            </table>
+            <button class="checkout-button">Checkout</button>
+        </div>
     </div>
 </body>
 </html>

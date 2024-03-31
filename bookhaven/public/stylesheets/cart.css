@@ -1,33 +1,58 @@
-/* cart.css */
-
-/* Add your custom styles here */
+body {
+    padding: 20px;
+    background: linear-gradient(to right, #765a3c, #9a8773);
+    height: 100vh;
+    margin: 0;
+}
 
 .container {
+    width: 80%;
+    margin: 0 auto;
+}
+
+h1 {
+    color: #fff;
+    font-size: 2.5em;
+    text-align: center;
+    font-weight: 600;
+    border-bottom: 2px solid #5e5042;
+    padding-bottom: 10px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
     margin-top: 20px;
 }
 
-.card {
-    margin-bottom: 20px;
+th, td {
+    padding: 15px;
+    border: 1px solid #ddd;
+    text-align: left;
+    font-size: 1.2em;
 }
 
-.card-title {
-    font-size: 18px;
-    font-weight: bold;
+th {
+    background-color: #2b2825;
+    color: white;
 }
 
-.card-author {
-    font-size: 14px;
-    color: gray;
+tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+.checkout-button {
+    display: block;
+    width: 200px;
+    height: 50px;
+    margin: 20px auto;
+    background-color: #2b2825;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.2em;
+    cursor: pointer;
 }
 
-.card-info {
-    margin-top: 10px;
-}
-
-.card-text {
-    margin-bottom: 5px;
-}
-
-.btn-primary {
-    margin-top: 10px;
+.checkout-button:hover {
+    background-color: #544c43;
 }

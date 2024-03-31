@@ -263,13 +263,19 @@ app.get('/cart', async (req, res) => {
             const [rows] = await pool.query('SELECT cart_id FROM cart WHERE customer_id = ?', [user.id]);
             const cartId = rows[0].cart_id;
             const [rows1] = await pool.query(`
-                SELECT books.book_name, books.author_name, books.genre, books.price, cart_items.count
+                SELECT book.book_name, book.author_name, book.genre, book.price, cart_items.count
                 FROM cart_items
-                JOIN books ON cart_items.book_id = books.book_id
+                JOIN book ON cart_items.book_id = book.book_id
                 WHERE cart_items.cart_id = ?
             `, [cartId]);
             const data = rows1;
-            res.render('cart', { data });
+            let totalItems = 0;
+            let totalPrice = 0;
+            data.forEach(item => {
+                totalItems += item.count;
+                totalPrice += item.count * item.price;
+            });
+            res.render('cart', { data: data, totalItems: totalItems, totalPrice: totalPrice });
         }catch(err){
             console.log('Error: ', err)
             res.redirect('/browse-books')

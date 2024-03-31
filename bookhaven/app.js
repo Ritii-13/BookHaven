@@ -18,9 +18,9 @@ const app = express()
 
 // Replace with your actual database credentials
 const pool = mysql.createPool({
-    host: '127.0.0.1',
+    host: 'localhost',
     user: 'root',
-    password: '1354',
+    password: 'root',
     database: 'bookhaven',
 }).promise();
 
@@ -93,14 +93,30 @@ app.get('/register', (req, res) => {
 })
 
 app.post('/register', async (req, res, next) =>{
-    try{
-        //write code to make a new entry in sql table to register 
+    try{    console.log(req.body);
+        const { first_name, last_name, pincode, address, contact, dob,email, passkey } = req.body;
+        if (!first_name || !last_name || !pincode || !address || !contact || !dob || !email || !passkey) {
+            console.log('Please fill in all required fields.');
+        }
 
+        pool.query('INSERT INTO customer (first_name, last_name, pincode, address, contact, date_of_birth, email, passkey, amount, owned_books) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+                [first_name, last_name, pincode, address, contact, dob, email, passkey, 0, null], (error, results, fields) => {
+        if (error) {
+            // Handle error after the release.
+                    console.error('Error occurred during the database operation:', error);
+                    return res.redirect('/register');
+                }
+  // Use results and fields if necessary.
+        console.log('Registration successful');
+});
+
+        return res.redirect('/customer/login'); 
     }catch(err){
         req.flash('error', err.message);
-        res.redirect('register')
+        return res.redirect('/register');
     }
-} )
+});
+
 
 
 app.get('/customer/login', (req, res) => {
@@ -142,10 +158,6 @@ app.post('/customer/login', async(req, res, next) => {
     }
 } )
 
-app.get('/admin/login', (req, res) => {
-    res.render('admin-login')
-})
-
 app.post('/admin/login', async (req, res, next) => {
     try{
         const {username, passkey} = req.body
@@ -160,21 +172,11 @@ app.post('/admin/login', async (req, res, next) => {
         console.log('Catch ka Error:-> ', err)
         next(err)
     }
-})
+});
 
-app.get('/admin-dashboard', async (req, res, next) => {
+app.get('/admin-dashboard', (req, res) => {
     // render the admin dashboard view
-    try{
-        const [rows] = await pool.query('SELECT * FROM book');
-        const data1 = rows;
-        const [rows2] = await pool.query('SELECT * FROM customer');
-        const data2 = rows2;
-        res.render('admin-dashboard', { data1, data2 });
-    }
-    catch(err){
-        // next(new ExpressError('No Books Found', 400))
-        console('Error: ', err)
-    }
+    res.render('admin-dashboard');
 });
 
 
@@ -191,50 +193,43 @@ app.get('/browse-books',   async (req, res, next) => {
         console('Error: ', err)
     }
 
-})
-
-function ensureLoggedIn(req, res, next) {
-    if (req.user && req.user.isLoggedIn) {
-        next();
-    } else {
-        res.status(401).send('Unauthorized');
-    }
-}
-
-
-app.post('/addtocart/:bookId', ensureLoggedIn, async (req, res, next) => {
-    const { bookId } = req.params;
-    const customerId = req.user.id;
-
-    try {
-        const [rows] = await pool.query('SELECT cart_id FROM cart WHERE customer_id = ?', [customerId]);
-        const cartId = rows[0].cart_id;
-
-        // Insert the book id for the cart id in the cart items table
-        await pool.query('INSERT INTO cart_items (cart_id, book_id) VALUES (?, ?)', [cartId, bookId]);
-        console.log('Added to cart');
-        res.send('Added to cart'); // Send a response indicating success
-    } catch (error) {
-        next(error);
-    }
 });
 
-app.get('/gotocart', ensureLoggedIn, async (req, res, next) => {
-    const customerId = req.user.id;
 
-    try {
-        const [rows] = await pool.query('SELECT cart_id FROM cart WHERE customer_id = ?', [customerId]);
-        const cartId = rows[0].cart_id;
+// app.get('/addtocart/#bookId',isLoggedIn, async (req, res, next) => {
+//     const { bookId } = req.body;
+//     const customerId = req.user.id;
 
-        // Insert the book id for the cart id in the cart items table
-        const [rows2] = await pool.query('SELECT book_id FROM cart_items WHERE cart_id = ?', [cartId]);
-        const data = rows2;
-        res.render('cart', { data });
-    } catch (error) {
-        next(error);
-    }
-});
-   
+//     try {
+//         // Get the cart id for the customer id
+//         const [rows] = await pool.query('SELECT cart_id FROM cart WHERE customer_id = ?', [customerId]);
+//         const cartId = rows[0].cart_id;
+
+//         // Insert the book id for the cart id in the cart items table
+//         await pool.query('INSERT INTO cart_items (cart_id, book_id) VALUES (?, ?)', [cartId, bookId]);
+//         console.log('Added to cart');
+//     } catch (error) {
+//         next(error);
+//     }
+// });
+
+// app.post('/addtocart/#book_id', (req, res) =>{
+//     res.send('Added to cart');
+// })
+
+// app.get('/gotocart', isLoggedIn, async (req, res, next) => {
+//     const customerId = req.user.id;
+
+//     try {
+//         const [rows] = await pool.query('SELECT * FROM cart WHERE customer_id = ?', [customerId]);
+//         const cart = rows;
+//         res.render('cart', { cart });
+//     } catch (error) {
+//         throw next(error);
+//     }
+// });
+
+
 
 
 app.get('*', (req, res, next) => {

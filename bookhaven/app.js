@@ -317,7 +317,7 @@ app.post('/manage-inventory/subtract', async (req, res) => {
 
 
 app.get('*', (req, res, next) => {
-
+    res.render('no-page')
 })
 
 

@@ -33,3 +33,71 @@ BEGIN
 END$$
 DELIMITER ;
 
+-- trigger for ensuring a book added to cart is not out of stock or inappropriately rated
+
+DELIMITER $$
+DROP TRIGGER IF EXISTS check_book_before_insert_cart$$
+CREATE TRIGGER check_book_before_insert_cart
+BEFORE INSERT ON Cart_Items
+FOR EACH ROW
+BEGIN
+    DECLARE is_eligible INT;
+    DECLARE current_stock INT;
+
+    -- Check if the book is eligible to be placed in the cart
+    SELECT IFNULL(
+        CASE
+            WHEN b.age_rating = 'A' AND cu.date_of_birth <= DATE_SUB(CURRENT_DATE(), INTERVAL 18 YEAR) THEN 1
+            WHEN b.age_rating != 'A' THEN 1
+            ELSE 0
+        END, 1)
+    INTO is_eligible
+    FROM Book b
+    INNER JOIN Cart c ON c.cart_id = NEW.cart_id
+    INNER JOIN Customer cu ON cu.customer_id = c.customer_id
+    WHERE b.book_id = NEW.book_id;
+
+    IF is_eligible = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Only customers aged 18 or older can add A-rated books to their cart.';
+    END IF;
+
+    -- Check if the book is in stock
+    SELECT stock INTO current_stock FROM Book WHERE book_id = NEW.book_id;
+
+    IF current_stock < 1 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'The book is out of stock.';
+    END IF;
+END$$
+DELIMITER ;
+
+-- to handle dupliate cart_item entries
+
+DELIMITER $$
+
+DROP TRIGGER IF EXISTS update_cart_item_count$$
+
+CREATE PROCEDURE insert_or_update_cart_item(
+    IN cart_id_param INT,
+    IN book_id_param INT
+)
+BEGIN
+    DECLARE existing_count INT;
+
+    -- Check if there's already an entry for the same cart and book
+    SELECT `count` INTO existing_count
+    FROM Cart_Items
+    WHERE cart_id = cart_id_param AND book_id = book_id_param;
+
+    -- If there's an existing entry, update its count
+    IF existing_count IS NOT NULL THEN
+        UPDATE Cart_Items
+        SET `count` = `count` + 1
+        WHERE cart_id = cart_id_param AND book_id = book_id_param;
+    ELSE
+        -- Otherwise, insert a new row
+        INSERT INTO Cart_Items (cart_id, book_id, `count`)
+        VALUES (cart_id_param, book_id_param, 1);
+    END IF;
+END$$
+
+DELIMITER ;

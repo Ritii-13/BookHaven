@@ -285,6 +285,32 @@ app.get('/cart', async (req, res) => {
     }
 });
 
+app.get('/manage-inventory', (req, res) => {
+    res.render('manage-inventory');
+});
+
+app.post('/manage-inventory/add', async (req, res) => {
+
+    const { bookId, quantity } = req.body;
+    try {
+            pool.query('UPDATE book SET stock = stock + ? WHERE book_id = ?', [quantity, bookId]);
+            res.redirect('/manage-inventory');
+        } catch (error) {
+        console.error('Error adding quantity to inventory:', error);
+    }
+});
+
+app.post('/manage-inventory/subtract', async (req, res) => {
+    const { bookId, quantity } = req.body;
+    try {
+            pool.query('UPDATE book SET stock = stock - ? WHERE book_id = ?', [quantity, bookId]);
+            res.redirect('/manage-inventory');
+        }  catch (error) {
+        console.error('Error subtracting quantity from inventory:', error);
+
+    }
+});
+
 
 app.get('*', (req, res, next) => {
 

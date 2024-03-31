@@ -290,12 +290,11 @@ app.get('/manage-inventory', (req, res) => {
 });
 
 app.post('/manage-inventory/add', async (req, res) => {
-
     const { bookId, quantity } = req.body;
     try {
-            pool.query('UPDATE book SET stock = stock + ? WHERE book_id = ?', [quantity, bookId]);
-            res.redirect('/manage-inventory');
-        } catch (error) {
+        await pool.query('UPDATE book SET stock = stock + ? WHERE book_id = ?', [quantity, bookId]);
+        res.redirect('/manage-inventory');
+    } catch (error) {
         console.error('Error adding quantity to inventory:', error);
     }
 });
@@ -303,11 +302,16 @@ app.post('/manage-inventory/add', async (req, res) => {
 app.post('/manage-inventory/subtract', async (req, res) => {
     const { bookId, quantity } = req.body;
     try {
-            pool.query('UPDATE book SET stock = stock - ? WHERE book_id = ?', [quantity, bookId]);
-            res.redirect('/manage-inventory');
-        }  catch (error) {
+        const [book] = await pool.query('SELECT stock FROM book WHERE book_id = ?', [bookId]);
+        const currentStock = book[0].stock;
+        if (currentStock - quantity >= 0) {
+            await pool.query('UPDATE book SET stock = stock - ? WHERE book_id = ?', [quantity, bookId]);
+        } else {
+            console.log('Error: Quantity to subtract exceeds current stock!');
+        }
+        res.redirect('/manage-inventory');
+    } catch (error) {
         console.error('Error subtracting quantity from inventory:', error);
-
     }
 });
 

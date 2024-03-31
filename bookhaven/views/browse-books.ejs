@@ -5,11 +5,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Browse books</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/css/bootstrap.min.css"
+        integrity="sha384-r4NyP46KrjDleawBgD5tp8Y7UzmLA05oM1iAEQ17CSuDqnUK2+k9luXQOfXJCJ4I" crossorigin="anonymous">
+    <link rel="stylesheet" href="/stylesheets/browse-books.css">
+    <style>
+        .cart-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+        }
+    </style>
 </head>
 <body>
     <h1>Our Collection</h1>
-    
+    <a href="/cart.ejs" class="btn btn-primary cart-button">Go to Cart</a>
+    <div class="container">
+        <div class="row">
+            <% data.forEach(function(book) { %>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title"><%= book.book_name %></h5>
+                            <h6 class="card-author"><%= book.author_name %></h6>
+                            <!-- Other elements like book image and description here -->
+                        </div>
+                    </div>
+                    <div class="card-info">
+                        <p class="card-text"><%= book.genre %></p>
+                        <p class="card-text">$ <%= book.price %></p>
+                        <button class="btn btn-primary">Add to Cart</button> <!-- Add this line -->
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+    </div>
 </body>
 </html>
 

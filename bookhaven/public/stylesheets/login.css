@@ -1,42 +1,38 @@
-#root {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 2rem;
-    text-align: center;
-  }
-  
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
-  }
-  .logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-  }
-  .logo.react:hover {
-    filter: drop-shadow(0 0 2em #61dafbaa);
-  }
-  
-  @keyframes logo-spin {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
-  }
-  
-  @media (prefers-reduced-motion: no-preference) {
-    a:nth-of-type(2) .logo {
-      animation: logo-spin infinite 20s linear;
-    }
-  }
-  
-  .card {
-    padding: 2em;
-  }
-  
-  .read-the-docs {
-    color: #888;
-  }
+body {
+  background: linear-gradient(to right, #876d47, #9c824c);
+  height: 100vh;
+  margin: 0;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+.card {
+  border-radius: 15px;
+  border: none;
+  box-shadow: 0px 0px 15px 5px rgba(0, 0, 0, 0.1);
+}
+
+.card-title {
+  background: linear-gradient(to right, #71583c, #b09b73);
+  color: white;
+  padding: 10px;
+  text-align: left;
+}
+
+.card-body {
+  padding: 30px;
+}
+
+.btn-success {
+  background-color: #71583c;
+  border: none;
+}
+
+.btn-success:hover {
+  background-color: #b09b73;
+  color: #292118;
+}
+
+#email {
+  margin-bottom: 10px;
+}

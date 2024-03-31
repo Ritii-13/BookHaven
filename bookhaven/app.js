@@ -53,7 +53,7 @@ passport.use(new LocalStrategy(
     async (email, passkey, done) => {
         try {
             console.log("wtf");
-            const [rows] = await pool.query(`SELECT * FROM Customer WHERE email = ${email}`);
+            const [rows] = await pool.query('SELECT * FROM Customer WHERE email = ? AND passkey = ?', [email, passkey]);
             const user = rows[0];
             if (!user || user.passkey !== passkey) {
                 console.log('Invalid username or password');
@@ -103,14 +103,67 @@ app.post('/register', async (req, res, next) =>{
 } )
 
 
-app.get('/login', (req, res) => {
+app.get('/customer/login', (req, res) => {
     res.render('login')
 })
 
-app.post('/login', passport.authenticate('local', {
-    successRedirect: '/browse-books',
-    failureRedirect: '/',
-}));
+app.post('/customer/login', async (req, res, next) => {
+    try {
+        const { email, passkey } = req.body;
+
+        const [rows] = await pool.query('SELECT * FROM Customer WHERE email = ? AND passkey = ?', [email, passkey]);
+
+        if (rows.length === 0) {
+            req.flash('error', 'Incorrect credentials');
+            return res.redirect('/customer/login');
+        }
+
+        const user = rows[0];
+
+        const serializedUser = {
+            id: user.customer_id,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            email: user.email,
+            passkey: user.passkey,
+            date_of_birth: user.date_of_birth,
+        };
+
+        req.login(serializedUser, err => {
+            if (err) {
+                console.error('Error in login:', err);
+                return next(err);
+            }
+            console.log('Login successful');
+            return res.redirect('/browse-books');
+        });
+    } catch (err) {
+        console.error('Error in login:', err);
+        next(err);
+    }
+});
+
+// app.get('/admin/login', (req, res) => {
+//     res.render('admin-login')
+// })
+
+// app.post('/admin/login', async (req, res, next) => {
+//     try {
+//         const { username, passkey } = req.body;
+
+//         if(username === 'admin1' && passkey === '123456'){
+//             req.flash('success', 'Welcome Admin');
+//             return res.redirect('/admin-dashboard');
+//         }else{
+//             req.flash('error', 'Incorrect credentials');
+//             return res.redirect('/admin/login');
+//         }
+
+//     } catch (err) {
+//         console.error('Error in login:', err);
+//         next(err);
+//     }
+// });
 
 
 app.get('/browse-books',   async (req, res, next) => {
@@ -124,27 +177,37 @@ app.get('/browse-books',   async (req, res, next) => {
         // next(new ExpressError('No Books Found', 400))
         console('Error: ', err)
     }
+
 })
 
-app.get('/addtocart/:bookId', isLoggedIn, async (req, res, next) => {
-    const { bookId } = req.params;
+// app.get('/addtocart/#bookId', isLoggedIn, async (req, res, next) => {
+//     const { bookId } = req.body;
+//     const customerId = req.user.id;
+
+//     try {
+//         await pool.query('INSERT INTO cart (book_id, customer_id) VALUES (?, ?)', [bookId, customerId]);
+//         req.flash('success', 'Book added to cart successfully.');
+//         res.redirect('/browse-books');
+//     } catch (error) {
+//         next(error);
+//     }
+// });
+
+// app.post('/addtocart/#book_id', (req, res) =>{
+//     res.send('Added to cart');
+// })
+
+app.get('/cart', isLoggedIn, async (req, res, next) => {
     const customerId = req.user.id;
 
     try {
-        await pool.query('INSERT INTO cart (book_id, customer_id) VALUES (?, ?)', [bookId, customerId]);
-        req.flash('success', 'Book added to cart successfully.');
-        res.redirect('/browse-books');
+        const [rows] = await pool.query('SELECT * FROM cart WHERE customer_id = ?', [customerId]);
+        const cart = rows;
+        res.render('cart', { cart });
     } catch (error) {
         next(error);
     }
 });
-
-app.post('/addtocart/#book_id', (req, res) =>{
-    //sql query
-})
-
-
-
 
 
 

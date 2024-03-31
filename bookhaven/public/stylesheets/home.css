@@ -1,5 +1,5 @@
 body {
-  background-color: #6c5639; /* Deep brown background */
+  background: linear-gradient(to right, #383026, #6b4f31);
   color: #fff;
 }
 
@@ -8,6 +8,10 @@ body {
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+}
+
+.title {
+  font-weight: 600;
 }
 
 h1 {
@@ -19,21 +23,17 @@ h4 {
   margin-bottom: 2rem; /* Added margin below the subheading */
 }
 
-.btn-light,
-.btn-dark {
-  transition: background-color 0.3s; /* Added hover effect transition */
+.custom-btn {
+  margin: 10px; /* Add some margin around the buttons */
+  padding: 15px 25px; /* Increase the padding to make the buttons larger */
+  border-radius: 5px; /* Add some border radius to make the buttons rounded */
+  border: 2px solid #f5eded;
+  transition: transform 0.3s; /* Add a transition for hover effects */
+  background: linear-gradient(to right, #6e6767, #6b5440); /* Add a gradient background */
+  color: white; /* Change the text color to white for better contrast */
 }
 
-.btn-light {
-  background-color: #6e6767; /* Light brown background for login button */
-  color: #333; /* Dark text color for login button */
+.custom-btn:hover {
+  transform: scale(1.05); /* Slightly increase the size of the button on hover */
 }
 
-.btn-dark {
-  background-color: #6b5440; /* Dark brown background for register button */
-}
-
-.btn-light:hover,
-.btn-dark:hover {
-  background-color: #5a4332; /* Darker brown on hover */
-}

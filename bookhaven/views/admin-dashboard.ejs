@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/css/bootstrap.min.css"
+        integrity="sha384-r4NyP46KrjDleawBgD5tp8Y7UzmLA05oM1iAEQ17CSuDqnUK2+k9luXQOfXJCJ4I" crossorigin="anonymous">
+    <link rel="stylesheet" href="/stylesheets/admin-dashboard.css">
+</head>
+<body>
+    <h1>Welcome to the Admin Dashboard</h1>
+
+    <h2>Customer Table</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Customer ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Pincode</th>
+                <th>Address</th>
+                <th>Contact</th>
+                <th>Date of Birth</th>
+                <th>Amount</th>
+                <th>Owned Books</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% customers.forEach(function(customer) { %>
+                <tr>
+                    <td><%= customer.id %></td>
+                    <td><%= customer.first_name + ' ' + customer.last_name %></td>
+                    <td><%= customer.email %></td>
+                    <td><%= customer.pincode %></td>
+                    <td><%= customer.address %></td>
+                    <td><%= customer.contact %></td>
+                    <td><%= customer.date_of_birth %></td>
+                    <td><%= customer.amount %></td>
+                    <td><%= customer.owned_books %></td>
+                </tr>
+            <% }); %>
+        </tbody>
+    </table>
+
+    <button>Manage Customers</button>
+
+    <h2>Book Table</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Book ID</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Quantity</th>
+                <th>Genre</th>
+                <th>Price</th>
+                <th>Rating</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% books.forEach(function(book) { %>
+                <tr>
+                    <td><%= book.book_id %></td>
+                    <td><%= book.book_name %></td>
+                    <td><%= book.author_name %></td>
+                    <td><%= book.stock %></td>
+                    <td><%= book.genre %></td>
+                    <td><%= book.price %></td>
+                    <td><%= book.age_rating %></td>
+                </tr>
+            <% }); %>
+        </tbody>
+    </table>
+
+    <button>Manage Inventory</button>
+
+</body>
+</html>

@@ -108,18 +108,16 @@ app.get('/customer/login', (req, res) => {
 })
 
 app.post('/customer/login', async (req, res, next) => {
-    try {
-        const { email, passkey } = req.body;
-
-        const [rows] = await pool.query('SELECT * FROM Customer WHERE email = ? AND passkey = ?', [email, passkey]);
-
-        if (rows.length === 0) {
-            req.flash('error', 'Incorrect credentials');
-            return res.redirect('/customer/login');
+    try{
+        const {email, passkey} = req.body;
+        const [rows] = await pool.query('SELECT * FROM Customer WHERE email = ? AND passkey = ?', [email, passkey])
+        if(rows.length === 0){
+            // req.flash('error', 'incorrect credentials')
+            // alert('error', 'incorrect credentials')
+            console.log('Incorrect credentials')
+            return res.redirect('/customer/login')
         }
-
-        const user = rows[0];
-
+        const user = rows[0]
         const serializedUser = {
             id: user.customer_id,
             first_name: user.first_name,
@@ -127,43 +125,52 @@ app.post('/customer/login', async (req, res, next) => {
             email: user.email,
             passkey: user.passkey,
             date_of_birth: user.date_of_birth,
-        };
-
-        req.login(serializedUser, err => {
-            if (err) {
-                console.error('Error in login:', err);
-                return next(err);
+        }
+        req.login(serializedUser , (err) => {
+            if(err){
+                console.log('Error!!!: ', err)
+                return next(err)
             }
-            console.log('Login successful');
-            return res.redirect('/browse-books');
-        });
+            // req.flash('success', 'Registration Successful. Welcome!')
+            console.log('Login successful')
+            // return done(null, user)
+            return res.redirect('/');
+        })
+    }catch(err){
+        console.log('Catch ka Error:-> ', err)
+        next(err)
+    }
+})
+
+app.get('/admin/login', (req, res) => {
+    res.render('admin-login')
+})
+
+app.post('/admin/login', async (req, res, next) => {
+    try {
+        const {username, passkey} = req.body;
+
+        if(username === 'admin1' && passkey === '123456'){
+            // req.flash('success', 'Welcome Admin');
+            console.log('Admin login successful');
+            return res.redirect('/admin-dashboard');
+        }else{
+            // req.flash('error', 'Incorrect credentials');
+            console.log('Incorrect credentials');
+            return res.redirect('/admin/login');
+        }
+
     } catch (err) {
         console.error('Error in login:', err);
         next(err);
     }
 });
 
-// app.get('/admin/login', (req, res) => {
-//     res.render('admin-login')
-// })
+app.get('/admin-dashboard', (req, res) => {
+    // render the admin dashboard view
+    res.render('admin-dashboard');
+});
 
-// app.post('/admin/login', async (req, res, next) => {
-//     try {
-//         const { username, passkey } = req.body;
-
-//         if(username === 'admin1' && passkey === '123456'){
-//             req.flash('success', 'Welcome Admin');
-//             return res.redirect('/admin-dashboard');
-//         }else{
-//             req.flash('error', 'Incorrect credentials');
-//             return res.redirect('/admin/login');
-//         }
-
-//     } catch (err) {
-//         console.error('Error in login:', err);
-//         next(err);
-//     }
-// });
 
 
 app.get('/browse-books',   async (req, res, next) => {
@@ -197,17 +204,17 @@ app.get('/browse-books',   async (req, res, next) => {
 //     res.send('Added to cart');
 // })
 
-app.get('/cart', isLoggedIn, async (req, res, next) => {
-    const customerId = req.user.id;
+// app.get('/cart', isLoggedIn, async (req, res, next) => {
+//     const customerId = req.user.id;
 
-    try {
-        const [rows] = await pool.query('SELECT * FROM cart WHERE customer_id = ?', [customerId]);
-        const cart = rows;
-        res.render('cart', { cart });
-    } catch (error) {
-        next(error);
-    }
-});
+//     try {
+//         const [rows] = await pool.query('SELECT * FROM cart WHERE customer_id = ?', [customerId]);
+//         const cart = rows;
+//         res.render('cart', { cart });
+//     } catch (error) {
+//         next(error);
+//     }
+// });
 
 
 

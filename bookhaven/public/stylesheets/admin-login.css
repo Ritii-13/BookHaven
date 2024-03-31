@@ -1,0 +1,38 @@
+body {
+    background: linear-gradient(to right, #876d47, #9c824c);
+    height: 100vh;
+    margin: 0;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+  
+  .card {
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0px 0px 15px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .card-title {
+    background: linear-gradient(to right, #71583c, #b09b73);
+    color: white;
+    padding: 10px;
+    text-align: left;
+  }
+  
+  .card-body {
+    padding: 30px;
+  }
+  
+  .btn-success {
+    background-color: #71583c;
+    border: none;
+  }
+  
+  .btn-success:hover {
+    background-color: #b09b73;
+    color: #292118;
+  }
+  
+  #email {
+    margin-bottom: 10px;
+  }

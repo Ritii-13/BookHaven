@@ -20,7 +20,7 @@ const app = express()
 const pool = mysql.createPool({
     host: 'localhost',
     user: 'root',
-    password: 'root',
+    password: '1354',
     database: 'bookhaven',
 }).promise();
 
@@ -148,7 +148,8 @@ app.post('/customer/login', async(req, res, next) => {
             date_of_birth: user.date_of_birth,
         }
 
-        req.user = serializedUser;
+        req.session.user = serializedUser;
+        console.log(req.session.user)
 
         // alert(Welcome back, ${user.first_name}!)
         res.redirect('/browse-books')
@@ -157,6 +158,10 @@ app.post('/customer/login', async(req, res, next) => {
         next(err)
     }
 } )
+
+app.get('/admin/login', (req, res) => {
+    res.render('admin-login')
+})
 
 app.post('/admin/login', async (req, res, next) => {
     try{
@@ -167,6 +172,7 @@ app.post('/admin/login', async (req, res, next) => {
             // alert('incorrect credentials')
             return res.redirect('/admin/login')
         }
+        console.log('Admin Logged In')
         res.redirect('/admin-dashboard')
     }catch(err){
         console.log('Catch ka Error:-> ', err)
@@ -174,15 +180,27 @@ app.post('/admin/login', async (req, res, next) => {
     }
 });
 
-app.get('/admin-dashboard', (req, res) => {
+app.get('/admin-dashboard', async (req, res) => {
     // render the admin dashboard view
-    res.render('admin-dashboard');
+    try{
+        const [rows] = await pool.query('SELECT * FROM book');
+        const data1 = rows;
+        const [rows1] = await pool.query('SELECT * FROM customer');
+        const data2 = rows1;
+
+        res.render('admin-dashboard', { data1, data2 });
+    }
+    catch(err){
+        // next(new ExpressError('No Books Found', 400))
+        console.log('Error: ', err)
+    }
+
 });
 
 
 
 app.get('/browse-books',   async (req, res, next) => {
-
+    console.log(req.session.user)
     try{
         const [rows] = await pool.query('SELECT * FROM book');
         const data = rows;
@@ -190,28 +208,34 @@ app.get('/browse-books',   async (req, res, next) => {
     }
     catch(err){
         // next(new ExpressError('No Books Found', 400))
-        console('Error: ', err)
+        console.log('Error: ', err)
     }
 
 });
 
 
-// app.get('/addtocart/#bookId',isLoggedIn, async (req, res, next) => {
-//     const { bookId } = req.body;
-//     const customerId = req.user.id;
-
-//     try {
-//         // Get the cart id for the customer id
-//         const [rows] = await pool.query('SELECT cart_id FROM cart WHERE customer_id = ?', [customerId]);
-//         const cartId = rows[0].cart_id;
-
-//         // Insert the book id for the cart id in the cart items table
-//         await pool.query('INSERT INTO cart_items (cart_id, book_id) VALUES (?, ?)', [cartId, bookId]);
-//         console.log('Added to cart');
-//     } catch (error) {
-//         next(error);
-//     }
-// });
+app.post('/addtocart/:book_id', async(req, res) =>{
+    if(req.session.isLoggedIn){
+        const {book_id} = req.params;
+        const user = req.session.user
+        console.log('User: ', user)
+        try{
+            const [rows] = await pool.query('SELECT cart_id FROM cart WHERE customer_id = ?', [user.id]);
+            const cartId = rows[0].cart_id;
+    
+            // Insert the book id for the cart id in the cart items table
+            await pool.query('INSERT INTO cart_items (cart_id, book_id) VALUES (?, ?)', [cartId, book_id]);
+            console.log('Added to cart');
+            
+        }catch(err){
+            console.log('Error: ', err)
+        }
+    }else{
+        alert('You must be logged in first')
+        res.redirect('/')
+    }
+    
+})
 
 // app.post('/addtocart/#book_id', (req, res) =>{
 //     res.send('Added to cart');

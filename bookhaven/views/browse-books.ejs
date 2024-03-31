@@ -34,7 +34,9 @@
                     <div class="card-info">
                         <p class="card-text"><%= book.genre %></p>
                         <p class="card-text">$ <%= book.price %></p>
-                        <button class="btn btn-primary">Add to Cart</button> <!-- Add this line -->
+                        <form action="\addtocart\<%= book.book_id %>" method="POST" novalidate >
+                            <button class="btn btn-primary">Add to Cart</button> <!-- Add this line -->
+                        </form>
                     </div>
                 </div>
             <% }) %>

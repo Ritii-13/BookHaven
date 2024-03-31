@@ -11,7 +11,7 @@
 <body>
     <h1>Welcome to the Admin Dashboard</h1>
 
-    <h2>Customer Table</h2>
+    <h2>Customers</h2>
     <table>
         <thead>
             <tr>
@@ -29,7 +29,7 @@
         <tbody>
             <% data2.forEach(function(customer) { %>
                 <tr>
-                    <td><%= customer.id %></td>
+                    <td><%= customer.customer_id %></td>
                     <td><%= customer.first_name + ' ' + customer.last_name %></td>
                     <td><%= customer.email %></td>
                     <td><%= customer.pincode %></td>
@@ -45,7 +45,7 @@
 
     <button>Manage Customers</button>
 
-    <h2>Book Table</h2>
+    <h2>Inventory</h2>
     <table>
         <thead>
             <tr>
@@ -59,7 +59,7 @@
             </tr>
         </thead>
         <tbody>
-            <% data.forEach(function(book) { %>
+            <% data1.forEach(function(book) { %>
                 <tr>
                     <td><%= book.book_id %></td>
                     <td><%= book.book_name %></td>

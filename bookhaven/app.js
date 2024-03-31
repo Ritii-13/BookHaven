@@ -155,20 +155,6 @@ app.post('/admin/login', async (req, res, next) => {
             // alert('incorrect credentials')
             return res.redirect('/admin/login')
         }
-
-        // const user = rows[0]
-        // const serializedUser = {
-        //     id: user.customer_id,
-        //     first_name: user.first_name,
-        //     last_name: user.last_name,
-        //     email: user.email,
-        //     passkey: user.passkey,
-        //     date_of_birth: user.date_of_birth,
-        // }
-
-        // req.user = serializedUser;
-
-        // alert(Welcome back, ${user.first_name}!)
         res.redirect('/admin-dashboard')
     }catch(err){
         console.log('Catch ka Error:-> ', err)

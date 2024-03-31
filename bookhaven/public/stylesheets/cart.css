@@ -1,0 +1,33 @@
+/* cart.css */
+
+/* Add your custom styles here */
+
+.container {
+    margin-top: 20px;
+}
+
+.card {
+    margin-bottom: 20px;
+}
+
+.card-title {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.card-author {
+    font-size: 14px;
+    color: gray;
+}
+
+.card-info {
+    margin-top: 10px;
+}
+
+.card-text {
+    margin-bottom: 5px;
+}
+
+.btn-primary {
+    margin-top: 10px;
+}

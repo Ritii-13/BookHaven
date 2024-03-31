@@ -11,7 +11,7 @@ const flash = require('connect-flash');
 
 
 const ageValidation = require('./utils/ageValidation')
-const isLoggedIn = require('./utils/isLoggedIn')
+// const isLoggedIn = require('./utils/isLoggedIn')
 const ExpressError = require('./utils/ExpressError')
 
 const app = express()
@@ -107,16 +107,21 @@ app.get('/customer/login', (req, res) => {
     res.render('login')
 })
 
-app.post('/customer/login', async (req, res, next) => {
+let isLoggedIn = false
+
+app.post('/customer/login', async(req, res, next) => {
     try{
-        const {email, passkey} = req.body;
-        const [rows] = await pool.query('SELECT * FROM Customer WHERE email = ? AND passkey = ?', [email, passkey])
+        const {email, passkey} = req.body
+        const [rows] = await pool.query('SELECT * FROM Customer WHERE email=? AND passkey=?', [email, passkey])
         if(rows.length === 0){
             // req.flash('error', 'incorrect credentials')
-            // alert('error', 'incorrect credentials')
-            console.log('Incorrect credentials')
+            // alert('incorrect credentials')
             return res.redirect('/customer/login')
         }
+
+        isLoggedIn = true
+        req.session.isLoggedIn = true
+
         const user = rows[0]
         const serializedUser = {
             id: user.customer_id,
@@ -126,25 +131,16 @@ app.post('/customer/login', async (req, res, next) => {
             passkey: user.passkey,
             date_of_birth: user.date_of_birth,
         }
-        req.login(serializedUser , (err) => {
-            if(err){
-                console.log('Error!!!: ', err)
-                return next(err)
-            }
-            // req.flash('success', 'Registration Successful. Welcome!')
-            console.log('Login successful')
-            // return done(null, user)
-            return res.redirect('/');
-        })
+
+        req.user = serializedUser;
+
+        // alert(Welcome back, ${user.first_name}!)
+        res.redirect('/browse-books')
     }catch(err){
         console.log('Catch ka Error:-> ', err)
         next(err)
     }
-})
-
-app.get('/admin/login', (req, res) => {
-    res.render('admin-login')
-})
+} )
 
 app.post('/admin/login', async (req, res, next) => {
     try {
@@ -187,24 +183,29 @@ app.get('/browse-books',   async (req, res, next) => {
 
 })
 
-// app.get('/addtocart/#bookId', isLoggedIn, async (req, res, next) => {
-//     const { bookId } = req.body;
-//     const customerId = req.user.id;
 
-//     try {
-//         await pool.query('INSERT INTO cart (book_id, customer_id) VALUES (?, ?)', [bookId, customerId]);
-//         req.flash('success', 'Book added to cart successfully.');
-//         res.redirect('/browse-books');
-//     } catch (error) {
-//         next(error);
-//     }
-// });
+app.get('/addtocart/#bookId',isLoggedIn, async (req, res, next) => {
+    const { bookId } = req.body;
+    const customerId = req.user.id;
+
+    try {
+        // Get the cart id for the customer id
+        const [rows] = await pool.query('SELECT cart_id FROM cart WHERE customer_id = ?', [customerId]);
+        const cartId = rows[0].cart_id;
+
+        // Insert the book id for the cart id in the cart items table
+        await pool.query('INSERT INTO cart_items (cart_id, book_id) VALUES (?, ?)', [cartId, bookId]);
+        console.log('Added to cart');
+    } catch (error) {
+        next(error);
+    }
+});
 
 // app.post('/addtocart/#book_id', (req, res) =>{
 //     res.send('Added to cart');
 // })
 
-// app.get('/cart', isLoggedIn, async (req, res, next) => {
+// app.get('/gotocart', isLoggedIn, async (req, res, next) => {
 //     const customerId = req.user.id;
 
 //     try {

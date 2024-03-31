@@ -19,7 +19,9 @@
 </head>
 <body>
     <h1>Our Collection</h1>
-    <a href="/cart.ejs" class="btn btn-primary cart-button">Go to Cart</a>
+    <form action="/cart" method="GET" novalidate>
+        <button class="btn btn-primary cart-button">Go to Cart</button>
+    </form>
     <div class="container">
         <div class="row">
             <% data.forEach(function(book) { %>

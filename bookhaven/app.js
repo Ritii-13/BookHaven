@@ -200,7 +200,7 @@ app.get('/admin-dashboard', async (req, res) => {
 
 
 app.get('/browse-books',   async (req, res, next) => {
-    console.log(req.session.user)
+    // console.log(req.session.user)
     try{
         const [rows] = await pool.query('SELECT * FROM book');
         const data = rows;
@@ -224,36 +224,60 @@ app.post('/addtocart/:book_id', async(req, res) =>{
             const cartId = rows[0].cart_id;
     
             // Insert the book id for the cart id in the cart items table
-            await pool.query('INSERT INTO cart_items (cart_id, book_id) VALUES (?, ?)', [cartId, book_id]);
+            await pool.query('CALL insert_or_update_cart_item (?, ?)', [cartId, book_id]);
             console.log('Added to cart');
+            res.redirect('/browse-books')
             
         }catch(err){
             console.log('Error: ', err)
+            // alert('Book is out of stock')
+            res.redirect('/browse-books')
         }
     }else{
-        alert('You must be logged in first')
         res.redirect('/')
     }
     
 })
 
-// app.post('/addtocart/#book_id', (req, res) =>{
-//     res.send('Added to cart');
-// })
-
-// app.get('/gotocart', isLoggedIn, async (req, res, next) => {
-//     const customerId = req.user.id;
-
-//     try {
-//         const [rows] = await pool.query('SELECT * FROM cart WHERE customer_id = ?', [customerId]);
-//         const cart = rows;
-//         res.render('cart', { cart });
-//     } catch (error) {
-//         throw next(error);
+// app.post('/gotocart/:customer_id', async (req, res, next) => {
+//     if(req.session.isLoggedIn){
+//         const user = req.session.user
+//         console.log('User: ', user)
+//         try{
+//             res.redirect('/cart')
+//         }catch(err){
+//             console.log('Error: ', err)
+//             // alert('Book is out of stock')
+//             res.redirect('/browse-books')
+//         }
+//     }else{
+//         res.redirect('/')
 //     }
 // });
 
-
+app.get('/cart', async (req, res) => {
+    if(req.session.isLoggedIn){
+        const user = req.session.user
+        console.log('User: ', user)
+        try{
+            const [rows] = await pool.query('SELECT cart_id FROM cart WHERE customer_id = ?', [user.id]);
+            const cartId = rows[0].cart_id;
+            const [rows1] = await pool.query(`
+                SELECT books.book_name, books.author_name, books.genre, books.price, cart_items.count
+                FROM cart_items
+                JOIN books ON cart_items.book_id = books.book_id
+                WHERE cart_items.cart_id = ?
+            `, [cartId]);
+            const data = rows1;
+            res.render('cart', { data });
+        }catch(err){
+            console.log('Error: ', err)
+            res.redirect('/browse-books')
+        }
+    }else{
+        res.redirect('/')
+    }
+});
 
 
 app.get('*', (req, res, next) => {

@@ -11,24 +11,28 @@
 <body>
     <h1>Cart</h1>
     <div class="container">
-        <div class="row">
-            <% data.forEach(function(book) { %>
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title"><%= book.book_name %></h5>
-                            <h6 class="card-author"><%= book.author_name %></h6>
-                            <!-- Other elements like book image and description here -->
-                        </div>
-                    </div>
-                    <div class="card-info">
-                        <p class="card-text"><%= book.genre %></p>
-                        <p class="card-text">$ <%= book.price %></p>
-                        <button class="btn btn-primary">Remove from Cart</button> <!-- Add this line -->   
-                    </div>
-                </div>
-            <% }) %>
-        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Book Name</th>
+                    <th>Author Name</th>
+                    <th>Genre</th>
+                    <th>Price</th>
+                    <th>Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% data.forEach(item => { %>
+                    <tr>
+                        <td><%= item.book_name %></td>
+                        <td><%= item.author_name %></td>
+                        <td><%= item.genre %></td>
+                        <td><%= item.price %></td>
+                        <td><%= item.count %></td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
     </div>
 </body>
-</html> 
+</html>

@@ -142,27 +142,41 @@ app.post('/customer/login', async(req, res, next) => {
     }
 } )
 
-app.post('/admin/login', async (req, res, next) => {
-    try {
-        const {username, passkey} = req.body;
+app.get('/admin/login', (req, res) => {
+    res.render('admin-login')
+})
 
-        if(username === 'admin1' && passkey === '123456'){
-            // req.flash('success', 'Welcome Admin');
-            console.log('Admin login successful');
-            return res.redirect('/admin-dashboard');
-        }else{
-            // req.flash('error', 'Incorrect credentials');
-            console.log('Incorrect credentials');
-            return res.redirect('/admin/login');
+app.post('/admin/login', async (req, res, next) => {
+    try{
+        const {username, passkey} = req.body
+        const [rows] = await pool.query('SELECT * FROM Admin WHERE username=? AND passkey=?', [username, passkey])
+        if(rows.length === 0){
+            // req.flash('error', 'incorrect credentials')
+            // alert('incorrect credentials')
+            return res.redirect('/admin/login')
         }
 
-    } catch (err) {
-        console.error('Error in login:', err);
-        next(err);
-    }
-});
+        // const user = rows[0]
+        // const serializedUser = {
+        //     id: user.customer_id,
+        //     first_name: user.first_name,
+        //     last_name: user.last_name,
+        //     email: user.email,
+        //     passkey: user.passkey,
+        //     date_of_birth: user.date_of_birth,
+        // }
 
-app.get('/admin-dashboard', (req, res) => {
+        // req.user = serializedUser;
+
+        // alert(Welcome back, ${user.first_name}!)
+        res.redirect('/admin/dashboard')
+    }catch(err){
+        console.log('Catch ka Error:-> ', err)
+        next(err)
+    }
+})
+
+app.get('/admin/dashboard', (req, res) => {
     // render the admin dashboard view
     res.render('admin-dashboard');
 });
@@ -184,22 +198,22 @@ app.get('/browse-books',   async (req, res, next) => {
 })
 
 
-app.get('/addtocart/#bookId',isLoggedIn, async (req, res, next) => {
-    const { bookId } = req.body;
-    const customerId = req.user.id;
+// app.get('/addtocart/#bookId',isLoggedIn, async (req, res, next) => {
+//     const { bookId } = req.body;
+//     const customerId = req.user.id;
 
-    try {
-        // Get the cart id for the customer id
-        const [rows] = await pool.query('SELECT cart_id FROM cart WHERE customer_id = ?', [customerId]);
-        const cartId = rows[0].cart_id;
+//     try {
+//         // Get the cart id for the customer id
+//         const [rows] = await pool.query('SELECT cart_id FROM cart WHERE customer_id = ?', [customerId]);
+//         const cartId = rows[0].cart_id;
 
-        // Insert the book id for the cart id in the cart items table
-        await pool.query('INSERT INTO cart_items (cart_id, book_id) VALUES (?, ?)', [cartId, bookId]);
-        console.log('Added to cart');
-    } catch (error) {
-        next(error);
-    }
-});
+//         // Insert the book id for the cart id in the cart items table
+//         await pool.query('INSERT INTO cart_items (cart_id, book_id) VALUES (?, ?)', [cartId, bookId]);
+//         console.log('Added to cart');
+//     } catch (error) {
+//         next(error);
+//     }
+// });
 
 // app.post('/addtocart/#book_id', (req, res) =>{
 //     res.send('Added to cart');

@@ -27,7 +27,7 @@
             </tr>
         </thead>
         <tbody>
-            <% customers.forEach(function(customer) { %>
+            <% data2.forEach(function(customer) { %>
                 <tr>
                     <td><%= customer.id %></td>
                     <td><%= customer.first_name + ' ' + customer.last_name %></td>
@@ -59,7 +59,7 @@
             </tr>
         </thead>
         <tbody>
-            <% books.forEach(function(book) { %>
+            <% data.forEach(function(book) { %>
                 <tr>
                     <td><%= book.book_id %></td>
                     <td><%= book.book_name %></td>

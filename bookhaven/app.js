@@ -169,16 +169,26 @@ app.post('/admin/login', async (req, res, next) => {
         // req.user = serializedUser;
 
         // alert(Welcome back, ${user.first_name}!)
-        res.redirect('/admin/dashboard')
+        res.redirect('/admin-dashboard')
     }catch(err){
         console.log('Catch ka Error:-> ', err)
         next(err)
     }
 })
 
-app.get('/admin/dashboard', (req, res) => {
+app.get('/admin-dashboard', async (req, res, next) => {
     // render the admin dashboard view
-    res.render('admin-dashboard');
+    try{
+        const [rows] = await pool.query('SELECT * FROM book');
+        const data1 = rows;
+        const [rows2] = await pool.query('SELECT * FROM customer');
+        const data2 = rows2;
+        res.render('admin-dashboard', { data1, data2 });
+    }
+    catch(err){
+        // next(new ExpressError('No Books Found', 400))
+        console('Error: ', err)
+    }
 });
 
 

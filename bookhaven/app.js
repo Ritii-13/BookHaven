@@ -159,6 +159,12 @@ app.post('/customer/login', async(req, res, next) => {
     }
 } )
 
+app.get('/logout', (req, res) => {
+    req.session.isLoggedIn = false
+    req.session.user = null
+    res.redirect('/')
+})
+
 app.get('/admin/login', (req, res) => {
     res.render('admin-login')
 })

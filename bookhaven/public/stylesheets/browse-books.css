@@ -55,7 +55,7 @@ body {
     text-decoration: none; /* Remove the underline */
     display: inline-block;
     font-size: 16px;
-    margin: 4px 2px;
+    margin: 60px 2px;
     transition-duration: 0.4s; /* Add a transition */
     cursor: pointer; /* Change the cursor when hovering over the button */
     line-height: 25px;

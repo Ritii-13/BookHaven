@@ -56,3 +56,28 @@ tr:nth-child(even) {
 .checkout-button:hover {
     background-color: #544c43;
 }
+
+.btn {
+    background-color: #2b2825;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 60px 2px;
+    transition-duration: 0.4s;
+    cursor: pointer;
+    line-height: 25px;
+}
+
+.btn:hover {
+    background-color: white;
+    color: #2b2825;
+}
+
+.navbar {
+    background-color: #674b2f; /* Brown color */
+}
+

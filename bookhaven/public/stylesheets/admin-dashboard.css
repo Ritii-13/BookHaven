@@ -41,3 +41,20 @@ button {
 button:hover {
     background-color: #876c5f;
 }
+
+.btn {
+    display: inline-block;
+    background-color: #47301f;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    margin: 20px 2px;
+    font-size: 16px;
+    transition-duration: 0.4s;
+    cursor: pointer;
+}
+
+.btn:hover {
+    background-color: #876c5f;
+}

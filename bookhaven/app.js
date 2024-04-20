@@ -47,7 +47,7 @@ const sessionConfig = {
 }
 
 app.use(session(sessionConfig)); // Remove the () after sessionConfig
-app.use(flash())
+app.use(expressflash())
 
 app.use(passport.initialize())
 app.use(passport.session())

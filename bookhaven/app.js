@@ -409,6 +409,7 @@ app.post('/checkout', async (req, res) => {
                 WHERE cart_items.cart_id = ?
             `, [cartId]);
             const data = rows1;
+            console.log('Data: ', data)
             //for loop with an if
             data.forEach( item => {
                 if( item.stock < item.count){
@@ -426,9 +427,11 @@ app.post('/checkout', async (req, res) => {
             });
 
             //initiating transaction
-            
+            let i = 1;
             for (let item of data) {
-
+                console.log(i);
+                console.log(item.count);
+                i++;
                 await pool.query( 'START TRANSACTION' )
                 .then(async(result) => {
                     await pool.query( 'LOCK TABLES book WRITE, orders WRITE, cart_items WRITE, cart WRITE, customer READ, reviews READ, admin READ, browses READ' )
@@ -437,13 +440,13 @@ app.post('/checkout', async (req, res) => {
                         .then( async(result) => {
                             await pool.query('DELETE FROM cart_items WHERE book_id = ? AND cart_id = ?;',[item.book_id, cartId] )
                             .then(async(result) => {
-                                await pool.query('UPDATE book SET stock = stock - ? WHERE book_id = ?', [item.count, item.book_id])
+                                await pool.query('UPDATE book SET stock = stock - ? WHERE book_id = ?', [item.count - item.count, item.book_id])
                                 .then(async(result)=>{
                                     await pool.query('COMMIT')
                                     .then(async(result)=>{
                                         await pool.query('UNLOCK TABLES')
                                         .then((result)=>{
-                                            res.redirect('/browse-books')
+                                            return res.redirect('/')
                                         })
                                     })
                                     .catch(async(err)=>{
@@ -451,6 +454,7 @@ app.post('/checkout', async (req, res) => {
                                         await pool.query('ROLLBACK')
                                         req.flash('error', 'ERROR OCCURED | Transaction failed')
                                         console.log('transaction failed: ', err)
+                                        return res.redirect('/cart')
                                         
                                     })
                                 })
@@ -459,7 +463,7 @@ app.post('/checkout', async (req, res) => {
                                     await pool.query('ROLLBACK')
                                     req.flash('error', 'ERROR OCCURED | Transaction failed')
                                     console.log('transaction failed: ', err)
-                                    
+                                    return res.redirect('/cart')
                                 })
                             })
                             .catch(async(err)=>{
@@ -467,6 +471,7 @@ app.post('/checkout', async (req, res) => {
                                 await pool.query('ROLLBACK')
                                 req.flash('error', 'ERROR OCCURED | Transaction failed')
                                 console.log('transaction failed: ', err)
+                                return res.redirect('/cart')
                             })
                         })
                         .catch( async (err) => {
@@ -474,6 +479,7 @@ app.post('/checkout', async (req, res) => {
                             await pool.query('ROLLBACK')
                             req.flash('error', 'ERROR OCCURED | Transaction failed')
                             console.log('transaction failed: ', err)
+                            return res.redirect('/cart')
                         })
                     })
                     .catch(async(err) => {
@@ -481,6 +487,7 @@ app.post('/checkout', async (req, res) => {
                         await pool.query('ROLLBACK')
                         req.flash('error', 'ERROR OCCURED | Transaction failed')
                         console.log('transaction failed: ', err)
+                        return res.redirect('/cart')
                     })
                 })
                 .catch(async(err) => {
@@ -488,15 +495,16 @@ app.post('/checkout', async (req, res) => {
                     await pool.query('ROLLBACK')
                     req.flash('error', 'ERROR OCCURED | Transaction failed')
                     console.log('transaction failed: ', err)
+                    return res.redirect('/cart')
                 })
             }                
         }catch(err){
             await pool.query('ROLLBACK');
             console.log('Error: ', err)
-            res.redirect('/cart')
+            return res.redirect('/cart')
         }
     }else{
-        res.redirect('/')
+        return res.redirect('/')
     }
 });
 app.get('*', (req, res, next) => {

@@ -113,7 +113,7 @@ app.post('/register', async (req, res, next) =>{
                     .then(async(result)=>{
                         await pool.query('UNLOCK TABLES')
                         .then((result)=>{
-                            console.log('Registration COmplete!')
+                            console.log('Registration Complete!')
                             res.redirect('/customer/login')
                         })
                         .catch((err)=>{
@@ -446,52 +446,50 @@ app.post('/checkout', async (req, res) => {
                                             res.redirect('/browse-books')
                                         })
                                     })
-                                    .catch((err)=>{
+                                    .catch(async(err)=>{
                                         console.log("Error in transaction stage6: ", err)
+                                        await pool.query('ROLLBACK')
                                         req.flash('error', 'ERROR OCCURED | Transaction failed')
                                         console.log('transaction failed: ', err)
                                         
                                     })
                                 })
-                                .catch((err)=>{
+                                .catch(async(err)=>{
                                     console.log("Error in transaction stage5: ", err)
+                                    await pool.query('ROLLBACK')
                                     req.flash('error', 'ERROR OCCURED | Transaction failed')
                                     console.log('transaction failed: ', err)
                                     
                                 })
                             })
-                            .catch((err)=>{
+                            .catch(async(err)=>{
                                 console.log("Error in transaction stage4: ", err)
+                                await pool.query('ROLLBACK')
                                 req.flash('error', 'ERROR OCCURED | Transaction failed')
                                 console.log('transaction failed: ', err)
                             })
                         })
                         .catch( async (err) => {
                             console.log("Error in transaction stage3: ", err)
+                            await pool.query('ROLLBACK')
                             req.flash('error', 'ERROR OCCURED | Transaction failed')
                             console.log('transaction failed: ', err)
                         })
                     })
-                    .catch((err) => {
+                    .catch(async(err) => {
                         console.log("Error in transaction stage2: ", err)
+                        await pool.query('ROLLBACK')
                         req.flash('error', 'ERROR OCCURED | Transaction failed')
                         console.log('transaction failed: ', err)
                     })
                 })
-                .catch((err) => {
+                .catch(async(err) => {
                     console.log("Error in transaction stage1: ", err)
+                    await pool.query('ROLLBACK')
                     req.flash('error', 'ERROR OCCURED | Transaction failed')
                     console.log('transaction failed: ', err)
                 })
-
-                
-
-                
-            }   
-            
-
-            //after successful transaction
-             
+            }                
         }catch(err){
             await pool.query('ROLLBACK');
             console.log('Error: ', err)

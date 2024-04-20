@@ -102,23 +102,51 @@ app.post('/register', async (req, res, next) =>{
             console.log('Please fill in all required fields.');
         }
 
-        pool.query('INSERT INTO customer (first_name, last_name, pincode, address, contact, date_of_birth, email, passkey, amount, owned_books) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
-                [first_name, last_name, pincode, address, contact, dob, email, passkey, 0, null], (error, results, fields) => {
-        if (error) {
-            // Handle error after the release.
-                    console.error('Error occurred during the database operation:', error);
-                    return res.redirect('/register');
-                }
-  // Use results and fields if necessary.
-        console.log('Registration successful');
-});
+        await pool.query( 'START TRANSACTION' )
+        .then(async(result) => {
+            await pool.query( 'LOCK TABLES book READ, orders READ, cart_items READ, cart READ, customer WRITE, reviews READ, admin READ, browses READ' )
+            .then(async(result)=>{
+                await pool.query('INSERT INTO customer (first_name, last_name, pincode, address, contact, date_of_birth, email, passkey, amount, owned_books) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+                [first_name, last_name, pincode, address, contact, dob, email, passkey, 0, null])
+                .then(async(result)=>{
+                    await pool.query('COMMIT')
+                    .then(async(result)=>{
+                        await pool.query('UNLOCK TABLES')
+                        .then((result)=>{
+                            console.log('Registration COmplete!')
+                            res.redirect('/customer/login')
+                        })
+                        .catch((err)=>{
+                            console.log("Error in registration stage5: ", err)
+                            res.redirect('/register')
+                        })
+                    })
+                    .catch((err)=>{
+                        console.log("Error in registration stage4: ", err)
+                        res.redirect('/register')
+                    })
+                }) 
+                .catch((err)=>{
+                    console.log("Error in registration stage3: ", err)
+                    res.redirect('/register')
+                })
+            })
+            .catch((err)=>{
+                console.log("Error in registration stage2: ", err)
+                res.redirect('/register')
+            })
+        })
+        .catch((err)=>{
+            console.log("Error in registration stage1: ", err)
+            res.redirect('/register')
+        })
 
-        return res.redirect('/customer/login'); 
-    }catch(err){
-        req.flash('error', err.message);
-        return res.redirect('/register');
+    }
+    catch(err){
+        console.log("Error in registering: ", err)
     }
 });
+
 
 
 
@@ -205,8 +233,10 @@ app.get('/admin-dashboard', async (req, res) => {
         const data1 = rows;
         const [rows1] = await pool.query('SELECT * FROM customer');
         const data2 = rows1;
+        const[rows2] = await pool.query('SELECT * FROM orders');
+        const data3 = rows2;
 
-        res.render('admin-dashboard', { data1, data2 });
+        res.render('admin-dashboard', { data1, data2, data3 });
     }
     catch(err){
         // next(new ExpressError('No Books Found', 400))
@@ -357,7 +387,6 @@ app.post('/manage-customers/subtract', async (req, res) => {
         await pool.query('DELETE FROM browses WHERE customer_id = ?', [customer_id]);
         await pool.query('DELETE FROM cart_items WHERE cart_id = (SELECT cart_id FROM cart WHERE customer_id = ?)', [customer_id]);
         await pool.query('DELETE FROM cart WHERE customer_id = ?', [customer_id]);
-        await pool.query('DELETE FROM customer_analysis WHERE customer_id = ?', [customer_id]);
         await pool.query('DELETE FROM orders WHERE customer_id = ?', [customer_id]);
         await pool.query('DELETE FROM customer WHERE customer_id = ?', [customer_id]);
         res.redirect('/manage-customers');
@@ -400,40 +429,62 @@ app.post('/checkout', async (req, res) => {
             
             for (let item of data) {
 
-                await pool.query('INSERT INTO orders (quantity, total_cost, book_id, customer_id) VALUES (?, ?, ?, ?);', [item.count, item.price, item.book_id, user.id ])
-                .then( async(result) => {
-                    await pool.query('DELETE FROM cart_items WHERE book_id = ? AND cart_id = ?;',[item.book_id, cartId] )
-                    .then(async(result) => {
-                        await pool.query('UPDATE book SET stock = stock - ? WHERE book_id = ?', [item.count, item.book_id])
-                        .then((result)=>{
-                            req.flash('success', 'Your order has been placed')
-                            setTimeout(() => {
-                                res.redirect('/')
-                            }, 1000)
+                await pool.query( 'START TRANSACTION' )
+                .then(async(result) => {
+                    await pool.query( 'LOCK TABLES book WRITE, orders WRITE, cart_items WRITE, cart WRITE, customer READ, reviews READ, admin READ, browses READ' )
+                    .then(async(result)=>{
+                        await pool.query('INSERT INTO orders (quantity, total_cost, book_id, customer_id) VALUES (?, ?, ?, ?);', [item.count, item.price, item.book_id, user.id ])
+                        .then( async(result) => {
+                            await pool.query('DELETE FROM cart_items WHERE book_id = ? AND cart_id = ?;',[item.book_id, cartId] )
+                            .then(async(result) => {
+                                await pool.query('UPDATE book SET stock = stock - ? WHERE book_id = ?', [item.count, item.book_id])
+                                .then(async(result)=>{
+                                    await pool.query('COMMIT')
+                                    .then(async(result)=>{
+                                        await pool.query('UNLOCK TABLES')
+                                        .then((result)=>{
+                                            res.redirect('/browse-books')
+                                        })
+                                    })
+                                    .catch((err)=>{
+                                        console.log("Error in transaction stage6: ", err)
+                                        req.flash('error', 'ERROR OCCURED | Transaction failed')
+                                        console.log('transaction failed: ', err)
+                                        
+                                    })
+                                })
+                                .catch((err)=>{
+                                    console.log("Error in transaction stage5: ", err)
+                                    req.flash('error', 'ERROR OCCURED | Transaction failed')
+                                    console.log('transaction failed: ', err)
+                                    
+                                })
+                            })
+                            .catch((err)=>{
+                                console.log("Error in transaction stage4: ", err)
+                                req.flash('error', 'ERROR OCCURED | Transaction failed')
+                                console.log('transaction failed: ', err)
+                            })
                         })
-                        .catch((err)=>{
+                        .catch( async (err) => {
                             console.log("Error in transaction stage3: ", err)
                             req.flash('error', 'ERROR OCCURED | Transaction failed')
-                            setTimeout(() => {
-                                res.redirect('/cart')
-                            }, 1000)
+                            console.log('transaction failed: ', err)
                         })
                     })
-                    .catch((err)=>{
+                    .catch((err) => {
                         console.log("Error in transaction stage2: ", err)
                         req.flash('error', 'ERROR OCCURED | Transaction failed')
-                        setTimeout(() => {
-                            res.redirect('/cart')
-                        }, 1000)
+                        console.log('transaction failed: ', err)
                     })
-                } )
-                .catch( async (err) => {
-                    console.log("Error in transaction stage2: ", err)
-                    req.flash('error', 'ERROR OCCURED | Transaction failed')
-                    setTimeout(() => {
-                        res.redirect('/cart')
-                    }, 1000)
                 })
+                .catch((err) => {
+                    console.log("Error in transaction stage1: ", err)
+                    req.flash('error', 'ERROR OCCURED | Transaction failed')
+                    console.log('transaction failed: ', err)
+                })
+
+                
 
                 
             }   

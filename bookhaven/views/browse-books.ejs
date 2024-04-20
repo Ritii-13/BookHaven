@@ -35,13 +35,14 @@
                     <div class="card">
                         <div class="card-body">
                             <h5 class="card-title"><%= book.book_name %></h5>
-                            <h6 class="card-author"><%= book.author_name %></h6>
+                            <h6 class="card-author"><%= book.author_name %></h6
                             <!-- Other elements like book image and description here -->
                         </div>
                     </div>
                     <div class="card-info">
                         <p class="card-text"><%= book.genre %></p>
                         <p class="card-text">$ <%= book.price %></p>
+                        <p class="card-text">Stock: <%= book.stock %></p>
                         <form action="\addtocart\<%= book.book_id %>" method="POST" novalidate >
                             <button class="btn btn-primary">Add to Cart</button> <!-- Add this line -->
                         </form>

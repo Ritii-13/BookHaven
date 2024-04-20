@@ -11,7 +11,7 @@
 <body>
     <nav class="navbar navbar-light bg-light">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">BookHaven</a>
+            <a class="navbar-brand" href="/browse-books">BookHaven</a>
             <button class="btn btn-outline-success my-2 my-sm-0" type="submit" onclick="location.href='/logout'">Logout</button>
         </div>
     </nav> 
@@ -35,6 +35,11 @@
                         <td><%= item.genre %></td>
                         <td><%= item.price %></td>
                         <td><%= item.count %></td>
+                        <td>
+                            <form action="/cart/delete/<%= item.book_id %>" method="POST" novalidate>
+                                <button class="btn btn-danger">Delete</button>
+                            </form>
+                        </td>
                     </tr>
                 <% }); %>
             </tbody>
@@ -50,8 +55,8 @@
             <table>
                 <!-- Your table content -->
             </table>
-            <form action="/checkout" method="POST" novalidate>
-                <button class="btn btn-primary">Checkout</button>
+            <form action="/checkout" method="POST" novalidate style="text-align: center;">
+                <button class="btn btn-primary" style="font-size: 20px; padding: 10px 20px;">Checkout</button>
             </form>
         </div>
     </div>

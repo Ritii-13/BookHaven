@@ -265,7 +265,7 @@ app.get('/cart', async (req, res) => {
             const [rows] = await pool.query('SELECT cart_id FROM cart WHERE customer_id = ?', [user.id]);
             const cartId = rows[0].cart_id;
             const [rows1] = await pool.query(`
-                SELECT book.book_name, book.author_name, book.genre, book.price, cart_items.count
+                SELECT book.book_id, book.book_name, book.author_name, book.genre, book.price, cart_items.count
                 FROM cart_items
                 JOIN book ON cart_items.book_id = book.book_id
                 WHERE cart_items.cart_id = ?
@@ -284,6 +284,36 @@ app.get('/cart', async (req, res) => {
         }
     }else{
         res.redirect('/')
+    }
+});
+
+app.post('/cart/delete/:book_id', async (req, res) => {
+    console.log('Bye')
+    const {book_id} = req.params;
+    const user = req.session.user
+    console.log('User: ', user)
+    console.log('Book ID: ', book_id);
+
+    try{
+        const [rows] = await pool.query('SELECT cart_id FROM cart WHERE customer_id = ?', [user.id]);
+        const cartId = rows[0].cart_id;
+        console.log('Cart ID: ', cartId);
+    
+        const [rows1] = await pool.query('SELECT count FROM cart_items WHERE cart_id = ? AND book_id = ?' , [cartId, book_id]);
+        console.log('Rows1: ', rows1);
+        const currentCount = rows1[0].count;
+    
+        if (currentCount > 1) {
+            await pool.query('UPDATE cart_items SET count = count - 1 WHERE cart_id = ? AND book_id = ?', [cartId, book_id]);
+        } else {
+            await pool.query('DELETE FROM cart_items WHERE cart_id = ? AND book_id = ?', [cartId, book_id]);
+        }
+    
+        res.redirect('/cart');
+    }catch(err){
+
+        console.log('Error: ', err)
+        res.redirect('/cart')
     }
 });
 
@@ -328,7 +358,7 @@ app.post('/manage-customers/subtract', async (req, res) => {
         await pool.query('DELETE FROM cart_items WHERE cart_id = (SELECT cart_id FROM cart WHERE customer_id = ?)', [customer_id]);
         await pool.query('DELETE FROM cart WHERE customer_id = ?', [customer_id]);
         await pool.query('DELETE FROM customer_analysis WHERE customer_id = ?', [customer_id]);
-        await pool.query('DELETE FROM `order` WHERE customer_id = ?', [customer_id]);
+        await pool.query('DELETE FROM orders WHERE customer_id = ?', [customer_id]);
         await pool.query('DELETE FROM customer WHERE customer_id = ?', [customer_id]);
         res.redirect('/manage-customers');
     } catch (error) {
@@ -336,7 +366,7 @@ app.post('/manage-customers/subtract', async (req, res) => {
     }
 });
 
-app.get('/checkout', async (req, res) => {
+app.post('/checkout', async (req, res) => {
     if(req.session.isLoggedIn){
         const user = req.session.user
         console.log('User: ', user)
@@ -367,66 +397,50 @@ app.get('/checkout', async (req, res) => {
             });
 
             //initiating transaction
-            await pool.query( 'START TRANSACTION; LOCK TABLES order WRITE, cart_items WRITE, book WRITE', (err, result) =>{
-                if(err){
-                    console.log("Error in transaction stage1: ", err)
-                    req.flash('error', 'ERROR OCCURED | Transaction failed')
-                    setTimeout(() => {
-                        res.redirect('/cart')
-                    }, 1000)
-                }
-            } )
-
-
-
+            
             for (let item of data) {
-                // Insert items into order table
-                await pool.query(`
-                    INSERT INTO order (count, price, book_id, customer_id)
-                    VALUES (?, ?, ?, ?)
-                `, [item.count, item.price, item.book_id, user.id], (err, result) => {
-                    if(err){
+
+                await pool.query('INSERT INTO orders (quantity, total_cost, book_id, customer_id) VALUES (?, ?, ?, ?);', [item.count, item.price, item.book_id, user.id ])
+                .then( async(result) => {
+                    await pool.query('DELETE FROM cart_items WHERE book_id = ? AND cart_id = ?;',[item.book_id, cartId] )
+                    .then(async(result) => {
+                        await pool.query('UPDATE book SET stock = stock - ? WHERE book_id = ?', [item.count, item.book_id])
+                        .then((result)=>{
+                            req.flash('success', 'Your order has been placed')
+                            setTimeout(() => {
+                                res.redirect('/')
+                            }, 1000)
+                        })
+                        .catch((err)=>{
+                            console.log("Error in transaction stage3: ", err)
+                            req.flash('error', 'ERROR OCCURED | Transaction failed')
+                            setTimeout(() => {
+                                res.redirect('/cart')
+                            }, 1000)
+                        })
+                    })
+                    .catch((err)=>{
                         console.log("Error in transaction stage2: ", err)
                         req.flash('error', 'ERROR OCCURED | Transaction failed')
                         setTimeout(() => {
                             res.redirect('/cart')
                         }, 1000)
-                    }
-                });
-
-                // Delete the same items from cart
-                await pool.query('DELETE FROM cart_items WHERE book_id = ? AND cart_id = ?', [item.book_id, cartId], (err, result) => {
-                    if(err){
-                        console.log("Error in transaction stage2: ", err)
-                        req.flash('error', 'ERROR OCCURED | Transaction failed')
-                        setTimeout(() => {
-                            res.redirect('/cart')
-                        }, 1000)                  
-                    }
-                });
-            
-            }
-
-            await pool.query( 'UNLOCK TABLES; COMMIT', async(err, result) => {
-                if(err){
-                    console.log("Error in transaction stage3: ", err)
-
-                    await pool.query('ROLLBACK', (err, result) => {
-                        console.log("ERROR IN ROLLBACK: ", err)
                     })
-
+                } )
+                .catch( async (err) => {
+                    console.log("Error in transaction stage2: ", err)
                     req.flash('error', 'ERROR OCCURED | Transaction failed')
                     setTimeout(() => {
                         res.redirect('/cart')
-                    }, 1000)                  
-                }
-            } )
+                    }, 1000)
+                })
+
+                
+            }   
+            
 
             //after successful transaction
-            req.flash('success', 'Your order has been placed  ')
-            setTimeout(() => {
-                res.redirect('/')
-            }, 1000) 
+             
         }catch(err){
             await pool.query('ROLLBACK');
             console.log('Error: ', err)
@@ -436,8 +450,6 @@ app.get('/checkout', async (req, res) => {
         res.redirect('/')
     }
 });
-
-
 app.get('*', (req, res, next) => {
     res.render('no-page')
 })

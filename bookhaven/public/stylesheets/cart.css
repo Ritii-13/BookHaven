@@ -81,3 +81,22 @@ tr:nth-child(even) {
     background-color: #674b2f; /* Brown color */
 }
 
+.btn-danger {
+    background-color: #2b2825;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    transition-duration: 0.4s;
+    cursor: pointer;
+    line-height: 25px;
+}
+
+.btn-danger:hover {
+    background-color: white;
+    color: #2b2825;
+}

@@ -1,6 +1,6 @@
 const express = require('express')
 const session = require('express-session')
-const flash = require('express-flash')
+const expressflash = require('express-flash')
 const mysql = require('mysql2')
 const ejsMate = require('ejs-mate')
 const methodOverride = require('method-override')
@@ -115,7 +115,7 @@ app.post('/register', async (req, res, next) =>{
 
         return res.redirect('/customer/login'); 
     }catch(err){
-        req.flash('error', err.message);
+        req.expressflash('error', err.message);
         return res.redirect('/register');
     }
 });
@@ -133,7 +133,7 @@ app.post('/customer/login', async(req, res, next) => {
         const {email, passkey} = req.body
         const [rows] = await pool.query('SELECT * FROM Customer WHERE email=? AND passkey=?', [email, passkey])
         if(rows.length === 0){
-            // req.flash('error', 'incorrect credentials')
+            // req.expressflash('error', 'incorrect credentials')
             // alert('incorrect credentials')
             return res.redirect('/customer/login')
         }
@@ -155,7 +155,7 @@ app.post('/customer/login', async(req, res, next) => {
         console.log(req.session.user)
 
         // alert(Welcome back, ${user.first_name}!)
-        req.flash('success', `Welcome, ${req.session.user.first_name}`)
+        req.expressflash('success', `Welcome, ${req.session.user.first_name}`)
         setTimeout( () => {
             res.redirect('/browse-books')
         }, 1000 )
@@ -168,7 +168,7 @@ app.post('/customer/login', async(req, res, next) => {
 app.get('/logout', (req, res) => {
     req.session.isLoggedIn = false
     req.session.user = null
-    req.flash('success', 'Successfully Logged Out!')
+    req.expressflash('success', 'Successfully Logged Out!')
     setTimeout( () => {
         res.redirect('/')
     }, 1000 )
@@ -183,11 +183,11 @@ app.post('/admin/login', async (req, res, next) => {
         const {username, passkey} = req.body
         const [rows] = await pool.query('SELECT * FROM Admin WHERE username=? AND passkey=?', [username, passkey])
         if(rows.length === 0){
-            // req.flash('error', 'incorrect credentials')
+            // req.expressflash('error', 'incorrect credentials')
             // alert('incorrect credentials')
             return res.redirect('/admin/login')
         }
-        req.flash('success', 'Admin login successful')
+        req.expressflash('success', 'Admin login successful')
         setTimeout( () => {
             res.redirect('/admin-dashboard')
         }, 1000 )
@@ -353,7 +353,7 @@ app.get('/checkout', async (req, res) => {
             //for loop with an if
             data.forEach( item => {
                 if( item.stock < item.count){
-                    req.flash('success', `${item.book.book_name} understocked or is out-of-stock!`)
+                    req.expressflash('success', `${item.book.book_name} understocked or is out-of-stock!`)
                     setTimeout(() => {
                         res.redirect('/cart')
                     }, 1000)
@@ -370,7 +370,7 @@ app.get('/checkout', async (req, res) => {
             await pool.query( 'START TRANSACTION; LOCK TABLES order WRITE, cart_items WRITE, book WRITE', (err, result) =>{
                 if(err){
                     console.log("Error in transaction stage1: ", err)
-                    req.flash('error', 'ERROR OCCURED | Transaction failed')
+                    req.expressflash('error', 'ERROR OCCURED | Transaction failed')
                     setTimeout(() => {
                         res.redirect('/cart')
                     }, 1000)
@@ -387,7 +387,7 @@ app.get('/checkout', async (req, res) => {
                 `, [item.count, item.price, item.book_id, user.id], (err, result) => {
                     if(err){
                         console.log("Error in transaction stage2: ", err)
-                        req.flash('error', 'ERROR OCCURED | Transaction failed')
+                        req.expressflash('error', 'ERROR OCCURED | Transaction failed')
                         setTimeout(() => {
                             res.redirect('/cart')
                         }, 1000)
@@ -398,7 +398,7 @@ app.get('/checkout', async (req, res) => {
                 await pool.query('DELETE FROM cart_items WHERE book_id = ? AND cart_id = ?', [item.book_id, cartId], (err, result) => {
                     if(err){
                         console.log("Error in transaction stage2: ", err)
-                        req.flash('error', 'ERROR OCCURED | Transaction failed')
+                        req.expressflash('error', 'ERROR OCCURED | Transaction failed')
                         setTimeout(() => {
                             res.redirect('/cart')
                         }, 1000)                  
@@ -415,7 +415,7 @@ app.get('/checkout', async (req, res) => {
                         console.log("ERROR IN ROLLBACK: ", err)
                     })
 
-                    req.flash('error', 'ERROR OCCURED | Transaction failed')
+                    req.expressflash('error', 'ERROR OCCURED | Transaction failed')
                     setTimeout(() => {
                         res.redirect('/cart')
                     }, 1000)                  
@@ -423,7 +423,7 @@ app.get('/checkout', async (req, res) => {
             } )
 
             //after successful transaction
-            req.flash('success', 'Your order has been placed  ')
+            req.expressflash('success', 'Your order has been placed  ')
             setTimeout(() => {
                 res.redirect('/')
             }, 1000) 
@@ -506,7 +506,7 @@ app.get('/checkout', (req, res) => {
   db.query(sql, (err, result) => {
     if(err) {
       console.log(err); // Log the error for debugging
-      req.flash('error', 'Transaction failed');
+      req.expressflash('error', 'Transaction failed');
       res.redirect('/checkout'); // Redirect to checkout page
       return; // Exit the function
     }
@@ -517,11 +517,11 @@ app.get('/checkout', (req, res) => {
     db.query(commitSql, (err, result) => {
       if(err) {
         console.log(err); // Log the error for debugging
-        req.flash('error', 'Transaction failed');
+        req.expressflash('error', 'Transaction failed');
         res.redirect('/checkout'); // Redirect to checkout page
         return; // Exit the function
       }
-      req.flash('success', 'Transaction successful');
+      req.expressflash('success', 'Transaction successful');
       res.redirect('/checkout'); // Redirect to checkout page
     });
   });

@@ -321,6 +321,24 @@ app.post('/manage-inventory/subtract', async (req, res) => {
     }
 });
 
+app.get('/manage-customers', (req, res) => {
+    res.render('manage-customers');
+});
+
+app.post('/manage-customers/subtract', async (req, res) => {
+    const { customer_id } = req.body;
+    try {
+        await pool.query('DELETE FROM browses WHERE customer_id = ?', [customer_id]);
+        await pool.query('DELETE FROM cart_items WHERE cart_id = (SELECT cart_id FROM cart WHERE customer_id = ?)', [customer_id]);
+        await pool.query('DELETE FROM cart WHERE customer_id = ?', [customer_id]);
+        await pool.query('DELETE FROM customer_analysis WHERE customer_id = ?', [customer_id]);
+        await pool.query('DELETE FROM `order` WHERE customer_id = ?', [customer_id]);
+        await pool.query('DELETE FROM customer WHERE customer_id = ?', [customer_id]);
+        res.redirect('/manage-customers');
+    } catch (error) {
+        console.error('Error deleting customer', error);
+    }
+});
 
 app.get('*', (req, res, next) => {
     res.render('no-page')

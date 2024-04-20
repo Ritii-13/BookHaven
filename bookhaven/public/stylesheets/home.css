@@ -15,25 +15,26 @@ body {
 }
 
 h1 {
-  font-size: 3.5rem; /* Larger font size for BookHaven */
+  font-size: 3.5rem; 
 }
 
 h4 {
-  font-size: 1.5rem; /* Font size for subheading */
-  margin-bottom: 2rem; /* Added margin below the subheading */
+  font-size: 1.5rem; 
+
+  margin-bottom: 2rem; 
 }
 
 .custom-btn {
-  margin: 10px; /* Add some margin around the buttons */
-  padding: 15px 25px; /* Increase the padding to make the buttons larger */
-  border-radius: 5px; /* Add some border radius to make the buttons rounded */
+  margin: 10px; 
+  padding: 15px 25px; 
+  border-radius: 5px;
   border: 2px solid #f5eded;
-  transition: transform 0.3s; /* Add a transition for hover effects */
-  background: linear-gradient(to right, #6e6767, #6b5440); /* Add a gradient background */
-  color: white; /* Change the text color to white for better contrast */
+  transition: transform 0.3s; 
+  background: linear-gradient(to right, #6e6767, #6b5440); 
+  color: white; 
 }
 
 .custom-btn:hover {
-  transform: scale(1.05); /* Slightly increase the size of the button on hover */
+  transform: scale(1.05); 
 }
-
+ 

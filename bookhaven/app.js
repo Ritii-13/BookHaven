@@ -1,5 +1,6 @@
 const express = require('express')
 const session = require('express-session')
+const flash = require('express-flash')
 const mysql = require('mysql2')
 const ejsMate = require('ejs-mate')
 const methodOverride = require('method-override')
@@ -13,8 +14,10 @@ const flash = require('connect-flash');
 const ageValidation = require('./utils/ageValidation')
 // const isLoggedIn = require('./utils/isLoggedIn')
 const ExpressError = require('./utils/ExpressError')
+const { PoolConnection } = require('mysql2/typings/mysql/lib/PoolConnection')
 
 const app = express()
+app.use(flash())
 
 // Replace with your actual database credentials
 const pool = mysql.createPool({
@@ -152,7 +155,10 @@ app.post('/customer/login', async(req, res, next) => {
         console.log(req.session.user)
 
         // alert(Welcome back, ${user.first_name}!)
-        res.redirect('/browse-books')
+        req.flash('success', `Welcome, ${req.session.user.first_name}`)
+        setTimeout( () => {
+            res.redirect('/browse-books')
+        }, 1000 )
     }catch(err){
         console.log('Catch ka Error:-> ', err)
         next(err)
@@ -162,7 +168,10 @@ app.post('/customer/login', async(req, res, next) => {
 app.get('/logout', (req, res) => {
     req.session.isLoggedIn = false
     req.session.user = null
-    res.redirect('/')
+    req.flash('success', 'Successfully Logged Out!')
+    setTimeout( () => {
+        res.redirect('/')
+    }, 1000 )
 })
 
 app.get('/admin/login', (req, res) => {
@@ -178,8 +187,11 @@ app.post('/admin/login', async (req, res, next) => {
             // alert('incorrect credentials')
             return res.redirect('/admin/login')
         }
-        console.log('Admin Logged In')
-        res.redirect('/admin-dashboard')
+        req.flash('success', 'Admin login successful')
+        setTimeout( () => {
+            res.redirect('/admin-dashboard')
+        }, 1000 )
+        // console.log('Admin Logged In')
     }catch(err){
         console.log('Catch ka Error:-> ', err)
         next(err)
@@ -244,22 +256,6 @@ app.post('/addtocart/:book_id', async(req, res) =>{
     }
     
 })
-
-// app.post('/gotocart/:customer_id', async (req, res, next) => {
-//     if(req.session.isLoggedIn){
-//         const user = req.session.user
-//         console.log('User: ', user)
-//         try{
-//             res.redirect('/cart')
-//         }catch(err){
-//             console.log('Error: ', err)
-//             // alert('Book is out of stock')
-//             res.redirect('/browse-books')
-//         }
-//     }else{
-//         res.redirect('/')
-//     }
-// });
 
 app.get('/cart', async (req, res) => {
     if(req.session.isLoggedIn){
@@ -340,6 +336,108 @@ app.post('/manage-customers/subtract', async (req, res) => {
     }
 });
 
+app.get('/checkout', async (req, res) => {
+    if(req.session.isLoggedIn){
+        const user = req.session.user
+        console.log('User: ', user)
+        try{
+            const [rows] = await pool.query('SELECT cart_id FROM cart WHERE customer_id = ?', [user.id]);
+            const cartId = rows[0].cart_id;
+            const [rows1] = await pool.query(`
+                SELECT book.book_id, book.price, book.stock, book.book_name, cart_items.count
+                FROM cart_items
+                JOIN book ON cart_items.book_id = book.book_id
+                WHERE cart_items.cart_id = ?
+            `, [cartId]);
+            const data = rows1;
+            //for loop with an if
+            data.forEach( item => {
+                if( item.stock < item.count){
+                    req.flash('success', `${item.book.book_name} understocked or is out-of-stock!`)
+                    setTimeout(() => {
+                        res.redirect('/cart')
+                    }, 1000)
+                }
+            } )
+            let totalItems = 0;
+            let totalPrice = 0;
+            data.forEach(item => {
+                totalItems += item.count;
+                totalPrice += item.count * item.price;
+            });
+
+            //initiating transaction
+            await pool.query( 'START TRANSACTION; LOCK TABLES order WRITE, cart_items WRITE, book WRITE', (err, result) =>{
+                if(err){
+                    console.log("Error in transaction stage1: ", err)
+                    req.flash('error', 'ERROR OCCURED | Transaction failed')
+                    setTimeout(() => {
+                        res.redirect('/cart')
+                    }, 1000)
+                }
+            } )
+
+
+
+            for (let item of data) {
+                // Insert items into order table
+                await pool.query(`
+                    INSERT INTO order (count, price, book_id, customer_id)
+                    VALUES (?, ?, ?, ?)
+                `, [item.count, item.price, item.book_id, user.id], (err, result) => {
+                    if(err){
+                        console.log("Error in transaction stage2: ", err)
+                        req.flash('error', 'ERROR OCCURED | Transaction failed')
+                        setTimeout(() => {
+                            res.redirect('/cart')
+                        }, 1000)
+                    }
+                });
+
+                // Delete the same items from cart
+                await pool.query('DELETE FROM cart_items WHERE book_id = ? AND cart_id = ?', [item.book_id, cartId], (err, result) => {
+                    if(err){
+                        console.log("Error in transaction stage2: ", err)
+                        req.flash('error', 'ERROR OCCURED | Transaction failed')
+                        setTimeout(() => {
+                            res.redirect('/cart')
+                        }, 1000)                  
+                    }
+                });
+            
+            }
+
+            await pool.query( 'UNLOCK TABLES; COMMIT', async(err, result) => {
+                if(err){
+                    console.log("Error in transaction stage3: ", err)
+
+                    await pool.query('ROLLBACK', (err, result) => {
+                        console.log("ERROR IN ROLLBACK: ", err)
+                    })
+
+                    req.flash('error', 'ERROR OCCURED | Transaction failed')
+                    setTimeout(() => {
+                        res.redirect('/cart')
+                    }, 1000)                  
+                }
+            } )
+
+            //after successful transaction
+            req.flash('success', 'Your order has been placed  ')
+            setTimeout(() => {
+                res.redirect('/')
+            }, 1000) 
+        }catch(err){
+            await pool.query('ROLLBACK');
+            console.log('Error: ', err)
+            res.redirect('/cart')
+        }
+    }else{
+        res.redirect('/')
+    }
+});
+
+
 app.get('*', (req, res, next) => {
     res.render('no-page')
 })
@@ -380,3 +478,57 @@ app.listen(port, () => {
 // }
 
 // main()
+
+
+/*
+const express = require('express');
+const app = express();
+const mysql = require('mysql');
+
+// Create connection
+const db = mysql.createConnection({
+  host     : 'localhost',
+  user     : 'root',
+  password : 'password',
+  database : 'your_database'
+});
+
+// Connect
+db.connect((err) => {
+  if(err){
+      throw err;
+  }
+  console.log('MySQL Connected...');
+});
+
+app.get('/checkout', (req, res) => {
+  const sql = "START TRANSACTION; LOCK TABLE table1, table2, table3 IN EXCLUSIVE MODE;";
+  db.query(sql, (err, result) => {
+    if(err) {
+      console.log(err); // Log the error for debugging
+      req.flash('error', 'Transaction failed');
+      res.redirect('/checkout'); // Redirect to checkout page
+      return; // Exit the function
+    }
+
+    // Your code for successful transaction
+
+    const commitSql = "COMMIT;";
+    db.query(commitSql, (err, result) => {
+      if(err) {
+        console.log(err); // Log the error for debugging
+        req.flash('error', 'Transaction failed');
+        res.redirect('/checkout'); // Redirect to checkout page
+        return; // Exit the function
+      }
+      req.flash('success', 'Transaction successful');
+      res.redirect('/checkout'); // Redirect to checkout page
+    });
+  });
+});
+
+app.listen(3000, () => {
+  console.log('Server started on port 3000');
+});
+
+*/
